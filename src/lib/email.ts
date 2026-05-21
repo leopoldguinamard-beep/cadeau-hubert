@@ -50,6 +50,31 @@ export async function sendPaymentEmail(
   })
 }
 
+export async function sendAdminNotificationEmail(
+  adminEmail: string,
+  recipientName: string,
+  participantEmail: string,
+  step: 'round1' | 'round2',
+  adminUrl: string
+) {
+  const stepLabel = step === 'round1' ? '📝 Round 1 — suggestions & budget' : '🗳️ Round 2 — vote'
+  const stepDesc = step === 'round1'
+    ? 'a soumis ses suggestions et son budget'
+    : 'a voté pour son cadeau préféré'
+
+  await resend.emails.send({
+    from: FROM,
+    to: adminEmail,
+    subject: `${step === 'round1' ? '📝' : '🗳️'} ${participantEmail.slice(0, 3)} a répondu — cadeau de ${recipientName}`,
+    html: `
+      <h2>Nouvelle réponse reçue 🎁</h2>
+      <p><strong>${participantEmail}</strong> ${stepDesc}.</p>
+      <p>Étape : <strong>${stepLabel}</strong></p>
+      <p><a href="${adminUrl}" style="background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Voir le dashboard admin</a></p>
+    `,
+  })
+}
+
 export async function sendParticipantInviteEmail(
   email: string,
   recipientName: string,

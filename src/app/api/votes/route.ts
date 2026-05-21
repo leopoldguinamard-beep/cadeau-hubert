@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendAdminNotificationEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
@@ -30,6 +31,30 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await db.from('participants').update({ round2_done: true }).eq('id', participant_id)
+
+  // Notification admin
+  const { data: participant } = await db
+    .from('participants')
+    .select('email')
+    .eq('id', participant_id)
+    .single()
+
+  const { data: project } = await db
+    .from('projects')
+    .select('recipient_name, admin_email, admin_token')
+    .eq('id', project_id)
+    .single()
+
+  if (participant && project) {
+    const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL}/admin/${project_id}?token=${project.admin_token}`
+    sendAdminNotificationEmail(
+      project.admin_email,
+      project.recipient_name,
+      participant.email,
+      'round2',
+      adminUrl
+    ).catch(console.error)
+  }
 
   return NextResponse.json({ ok: true })
 }
