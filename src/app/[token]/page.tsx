@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Round1Flow from './Round1Flow'
+import LateJoinFlow from './LateJoinFlow'
 
 interface Props {
   params: Promise<{ token: string }>
@@ -27,22 +28,41 @@ export default async function ParticipantPage({ params }: Props) {
     status: string
   }
 
-  if (project.status !== 'round1') {
+  // Phase paiement → redirige directement vers la page de paiement
+  if (project.status === 'payment' || project.status === 'done') {
+    redirect(`/${token}/payment`)
+  }
+
+  // Phase round2
+  if (project.status === 'round2') {
+    // Déjà voté
+    if (participant.round2_done) {
+      return (
+        <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
+          <div className="text-center max-w-md">
+            <div className="text-5xl mb-4">✅</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Vote enregistré !</h1>
+            <p className="text-gray-600">Merci — l&apos;admin va bientôt finaliser le cadeau.</p>
+          </div>
+        </main>
+      )
+    }
+    // A fait le round1 → redirige vers vote
+    if (participant.round1_done) {
+      redirect(`/${token}/vote`)
+    }
+    // Arrive en retard (pas fait le round1) → flux de rattrapage
     return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="text-5xl mb-4">⏳</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Le Round 1 est terminé</h1>
-          <p className="text-gray-600">
-            {project.status === 'round2'
-              ? 'Consulte ton email — le Round 2 (vote) est en cours !'
-              : 'Le cadeau a été choisi. Consulte ton email pour payer.'}
-          </p>
-        </div>
-      </main>
+      <LateJoinFlow
+        participantId={participant.id}
+        projectId={project.id}
+        recipientName={project.recipient_name}
+        token={token}
+      />
     )
   }
 
+  // Phase round1 — déjà fait
   if (participant.round1_done) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
@@ -58,6 +78,7 @@ export default async function ParticipantPage({ params }: Props) {
     )
   }
 
+  // Phase round1 — pas encore fait
   return (
     <Round1Flow
       participantId={participant.id}

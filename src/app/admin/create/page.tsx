@@ -99,48 +99,80 @@ export default function CreateProject() {
             </div>
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Dates des rounds</h2>
-            <div className="space-y-4">
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold text-gray-800">Planning</h2>
+
+            {/* Round 1 */}
+            <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📝</span>
+                <div>
+                  <p className="font-medium text-gray-800 text-sm">Round 1 — Suggestions &amp; budgets</p>
+                  <p className="text-xs text-gray-500">Chacun propose des idées et indique un budget anonyme.</p>
+                </div>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fin du Round 1 — suggestions &amp; budgets</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
                 <input
                   type="date"
                   required
+                  autoFocus
                   value={form.round1_end}
                   onChange={e => setForm({ ...form, round1_end: e.target.value, round2_end: '', payment_deadline: '' })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${form.round1_end ? 'text-gray-700' : 'text-gray-400'}`}>
-                  Fin du Round 2 — votes
-                </label>
-                <input
-                  type="date"
-                  required
-                  disabled={!form.round1_end}
-                  min={form.round1_end}
-                  value={form.round2_end}
-                  onChange={e => setForm({ ...form, round2_end: e.target.value, payment_deadline: '' })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-400"
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${form.round2_end ? 'text-gray-700' : 'text-gray-400'}`}>
-                  Deadline de paiement
-                </label>
-                <input
-                  type="date"
-                  required
-                  disabled={!form.round2_end}
-                  min={form.round2_end}
-                  value={form.payment_deadline}
-                  onChange={e => setForm({ ...form, payment_deadline: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-400"
-                />
-              </div>
             </div>
+
+            {/* Round 2 — apparaît dès que round1 est rempli */}
+            {form.round1_end && (
+              <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🗳️</span>
+                  <div>
+                    <p className="font-medium text-gray-800 text-sm">Round 2 — Votes</p>
+                    <p className="text-xs text-gray-500">Tu valides les meilleures idées, tout le monde vote pour son préféré.</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
+                  <input
+                    type="date"
+                    required
+                    autoFocus
+                    min={form.round1_end}
+                    value={form.round2_end}
+                    onChange={e => setForm({ ...form, round2_end: e.target.value, payment_deadline: '' })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Paiement — apparaît dès que round2 est rempli */}
+            {form.round2_end && (
+              <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">💸</span>
+                  <div>
+                    <p className="font-medium text-gray-800 text-sm">Paiement</p>
+                    <p className="text-xs text-gray-500">Deadline pour que chacun t&apos;envoie sa part avant d&apos;acheter le cadeau.</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Date limite</label>
+                  <input
+                    type="date"
+                    required
+                    autoFocus
+                    min={form.round2_end}
+                    value={form.payment_deadline}
+                    onChange={e => setForm({ ...form, payment_deadline: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+            )}
           </section>
 
           <button
