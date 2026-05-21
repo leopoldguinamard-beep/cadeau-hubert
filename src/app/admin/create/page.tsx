@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function CreateProject() {
@@ -15,6 +15,29 @@ export default function CreateProject() {
     round2_end: '',
     payment_deadline: '',
   })
+
+  const round1Ref = useRef<HTMLInputElement>(null)
+  const round2Ref = useRef<HTMLInputElement>(null)
+  const paymentRef = useRef<HTMLInputElement>(null)
+
+  // Ouvre le calendrier Round 1 au montage
+  useEffect(() => {
+    try { round1Ref.current?.showPicker() } catch {}
+  }, [])
+
+  // Ouvre le calendrier Round 2 dès que Round 1 est rempli
+  useEffect(() => {
+    if (form.round1_end) {
+      setTimeout(() => { try { round2Ref.current?.showPicker() } catch {} }, 50)
+    }
+  }, [form.round1_end])
+
+  // Ouvre le calendrier paiement dès que Round 2 est rempli
+  useEffect(() => {
+    if (form.round2_end) {
+      setTimeout(() => { try { paymentRef.current?.showPicker() } catch {} }, 50)
+    }
+  }, [form.round2_end])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -114,9 +137,9 @@ export default function CreateProject() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
                 <input
+                  ref={round1Ref}
                   type="date"
                   required
-                  autoFocus
                   value={form.round1_end}
                   onChange={e => setForm({ ...form, round1_end: e.target.value, round2_end: '', payment_deadline: '' })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -137,9 +160,9 @@ export default function CreateProject() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
                   <input
+                    ref={round2Ref}
                     type="date"
                     required
-                    autoFocus
                     min={form.round1_end}
                     value={form.round2_end}
                     onChange={e => setForm({ ...form, round2_end: e.target.value, payment_deadline: '' })}
@@ -162,9 +185,9 @@ export default function CreateProject() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Date limite</label>
                   <input
+                    ref={paymentRef}
                     type="date"
                     required
-                    autoFocus
                     min={form.round2_end}
                     value={form.payment_deadline}
                     onChange={e => setForm({ ...form, payment_deadline: e.target.value })}
