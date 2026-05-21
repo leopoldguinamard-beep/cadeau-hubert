@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cadeau Groupé",
+  title: "KDO",
   description: "Organisez facilement un cadeau groupé pour un ami",
 };
 
