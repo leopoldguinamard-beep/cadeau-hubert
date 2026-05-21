@@ -181,6 +181,7 @@ export default function CreateProject() {
                   ref={round1Ref}
                   type="date"
                   required
+                  min={new Date().toISOString().slice(0, 10)}
                   value={form.round1_end}
                   onChange={e => setForm({ ...form, round1_end: e.target.value, round2_end: '', payment_deadline: '' })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
