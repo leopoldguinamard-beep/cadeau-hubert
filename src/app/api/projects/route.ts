@@ -25,9 +25,12 @@ export async function POST(req: NextRequest) {
     const { error: uploadError } = await db.storage
       .from('suggestions')
       .upload(path, photo, { contentType: photo.type })
-    if (!uploadError) {
+    if (uploadError) {
+      console.error('[projects] Photo upload failed:', uploadError.message)
+    } else {
       const { data: urlData } = db.storage.from('suggestions').getPublicUrl(path)
       recipient_photo_url = urlData.publicUrl
+      console.log('[projects] Photo uploaded:', recipient_photo_url)
     }
   }
 

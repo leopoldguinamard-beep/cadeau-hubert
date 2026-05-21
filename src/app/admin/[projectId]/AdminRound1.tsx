@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Props {
-  project: { id: string; recipient_name: string; round1_end: string; round2_end: string }
+  project: { id: string; recipient_name: string; round1_end: string; round2_end: string; recipient_photo_url?: string | null }
   suggestions: Array<{
     id: string
     title: string
@@ -63,7 +63,15 @@ export default function AdminRound1({ project, suggestions, participants, totalB
     <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-10 px-4">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="text-center">
-          <div className="text-4xl mb-2">🎁</div>
+          {project.recipient_photo_url ? (
+            <img
+              src={project.recipient_photo_url}
+              alt={project.recipient_name}
+              className="w-20 h-20 rounded-full object-cover mx-auto mb-3 ring-4 ring-white shadow-md"
+            />
+          ) : (
+            <div className="text-4xl mb-2">🎁</div>
+          )}
           <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {project.recipient_name}</h1>
           <p className="text-gray-500 mt-1">Dashboard admin — Round 1</p>
         </div>
