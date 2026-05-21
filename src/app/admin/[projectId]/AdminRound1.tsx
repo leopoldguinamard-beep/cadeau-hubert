@@ -35,7 +35,7 @@ export default function AdminRound1({ project, suggestions, participants, totalB
   }
 
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.origin + adminUrl)
+    navigator.clipboard.writeText(`${origin}/rejoindre/${project.id}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
