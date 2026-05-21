@@ -51,7 +51,12 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
       if (d.description) fd.append('description', d.description)
       if (d.price) fd.append('price', d.price)
       if (d.photo) fd.append('photo', d.photo)
-      await fetch('/api/suggestions', { method: 'POST', body: fd })
+      const res = await fetch('/api/suggestions', { method: 'POST', body: fd })
+      if (!res.ok) {
+        setLoading(false)
+        setErrors([`Erreur lors de l'envoi de "${d.title.trim()}". Réessaie.`])
+        return
+      }
     }
 
     setLoading(false)
