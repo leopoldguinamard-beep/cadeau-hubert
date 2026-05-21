@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Suggestion {
@@ -13,7 +13,7 @@ interface Suggestion {
 interface Props {
   project: { id: string; recipient_name: string; round2_end: string }
   suggestions: Suggestion[]
-  participants: Array<{ id: string; email: string; round2_done: boolean }>
+  participants: Array<{ id: string; email: string; token: string; round2_done: boolean }>
   voteCounts: Record<string, number>
   totalBudget: number
   adminToken: string
@@ -24,10 +24,25 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
   const [selectedId, setSelectedId] = useState<string>('')
   const [finalCost, setFinalCost] = useState('')
   const [loading, setLoading] = useState(false)
+  const [origin, setOrigin] = useState('')
+  const [copiedToken, setCopiedToken] = useState<string | null>(null)
+
+  useEffect(() => { setOrigin(window.location.origin) }, [])
 
   const done = participants.filter(p => p.round2_done).length
   const total = participants.length
   const maxVotes = Math.max(...Object.values(voteCounts), 1)
+
+  const copyLink = (token: string) => {
+    navigator.clipboard.writeText(`${origin}/${token}/vote`)
+    setCopiedToken(token)
+    setTimeout(() => setCopiedToken(null), 2000)
+  }
+
+  const copyAll = () => {
+    const links = participants.map(p => `${p.email} : ${origin}/${p.token}/vote`).join('\n')
+    navigator.clipboard.writeText(links)
+  }
 
   const handleFinalize = async () => {
     if (!selectedId || !finalCost) return alert('Sélectionne un cadeau et entre le coût final.')
@@ -55,6 +70,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
           <p className="text-gray-500 mt-1">Dashboard admin — Round 2</p>
         </div>
 
+        {/* Progression votes */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="font-semibold text-gray-800 mb-3">Votes en cours</h2>
           <div className="flex items-center gap-4 mb-2">
@@ -71,6 +87,42 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
           </p>
         </div>
 
+        {/* Liens de vote à partager */}
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="font-semibold text-gray-800">Liens de vote</h2>
+              <p className="text-sm text-gray-500">Envoie le lien à chaque participant par WhatsApp / SMS</p>
+            </div>
+            <button
+              onClick={copyAll}
+              className="text-sm text-indigo-600 font-medium hover:text-indigo-800 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+            >
+              Tout copier
+            </button>
+          </div>
+          <div className="space-y-2">
+            {participants.map(p => (
+              <div key={p.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{p.email}</p>
+                  <p className="text-xs text-gray-400 font-mono truncate">{origin}/{p.token}/vote</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {p.round2_done && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Voté ✓</span>}
+                  <button
+                    onClick={() => copyLink(p.token)}
+                    className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    {copiedToken === p.token ? 'Copié !' : 'Copier'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Résultats des votes */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="font-semibold text-gray-800 mb-4">Résultats des votes</h2>
           <div className="space-y-4">
@@ -100,10 +152,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
                         {s.description && <p className="text-sm text-gray-500 mt-0.5">{s.description}</p>}
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex-1 bg-gray-100 rounded-full h-2">
-                            <div
-                              className="bg-indigo-500 h-2 rounded-full"
-                              style={{ width: `${(count / maxVotes) * 100}%` }}
-                            />
+                            <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${(count / maxVotes) * 100}%` }} />
                           </div>
                           <span className="text-sm font-medium text-gray-600">{count} vote{count > 1 ? 's' : ''}</span>
                         </div>
@@ -116,10 +165,11 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
           </div>
         </div>
 
+        {/* Finaliser */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="font-semibold text-gray-800 mb-3">Finaliser le cadeau</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Sélectionne le cadeau gagnant ci-dessus, entre le prix réel, et envoie les mails de paiement.
+            Sélectionne le cadeau gagnant ci-dessus, entre le prix réel, et génère les liens de paiement.
           </p>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Coût réel du cadeau (€)</label>
@@ -143,7 +193,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
             disabled={loading || !selectedId || !finalCost}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-semibold py-3 rounded-xl transition-colors"
           >
-            {loading ? 'Envoi des mails...' : 'Valider et envoyer les mails de paiement'}
+            {loading ? 'Calcul en cours...' : 'Valider et générer les liens de paiement'}
           </button>
         </div>
       </div>

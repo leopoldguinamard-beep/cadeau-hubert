@@ -30,7 +30,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
 
   const { data: participants } = await db
     .from('participants')
-    .select('id, email, round1_done, round2_done')
+    .select('id, email, token, round1_done, round2_done')
     .eq('project_id', projectId)
 
   const { data: votes } = await db
