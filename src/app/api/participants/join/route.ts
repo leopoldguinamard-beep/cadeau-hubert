@@ -3,9 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
-  const { project_id, email } = await req.json()
+  const { project_id, email, first_name } = await req.json()
 
-  if (!project_id || !email) {
+  if (!project_id || !email || !first_name) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   // Upsert : retrouve le participant existant ou en crée un nouveau
   const { data, error } = await db
     .from('participants')
-    .upsert({ project_id, email }, { onConflict: 'project_id,email' })
+    .upsert({ project_id, email, first_name }, { onConflict: 'project_id,email' })
     .select('token')
     .single()
 

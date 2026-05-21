@@ -12,9 +12,9 @@ interface Suggestion {
 }
 
 interface Props {
-  project: { id: string; recipient_name: string; round2_end: string }
+  project: { id: string; recipient_name: string; round2_end: string; admin_name?: string | null }
   suggestions: Suggestion[]
-  participants: Array<{ id: string; email: string; token: string; round2_done: boolean }>
+  participants: Array<{ id: string; first_name: string | null; email: string; round2_done: boolean }>
   voteCounts: Record<string, number>
   totalBudget: number
   adminToken: string
@@ -25,7 +25,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [origin, setOrigin] = useState('')
-  const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => { setOrigin(window.location.origin) }, [])
 
@@ -54,18 +54,12 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
     setSelectedIds(next)
   }
 
-  const copyLink = (token: string) => {
-    const url = `${origin}/${token}/vote`
-    const msg = `🗳️ C'est le moment de voter pour le cadeau de ${project.recipient_name} ! Clique ici pour voter : ${url}`
+  const copyLink = () => {
+    const url = `${origin}/rejoindre/${project.id}`
+    const msg = `🗳️ C'est le moment de voter pour le cadeau de ${project.recipient_name} ! Clique ici : ${url}`
     navigator.clipboard.writeText(msg)
-    setCopiedToken(token)
-    setTimeout(() => setCopiedToken(null), 2000)
-  }
-
-  const copyAll = () => {
-    const intro = `🗳️ C'est le moment de voter pour le cadeau de ${project.recipient_name} !`
-    const links = participants.map(p => `${p.email} : ${origin}/${p.token}/vote`).join('\n')
-    navigator.clipboard.writeText(`${intro}\n\n${links}`)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleFinalize = async () => {
@@ -90,7 +84,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
         <div className="text-center">
           <div className="text-4xl mb-2">🗳️</div>
           <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {project.recipient_name}</h1>
-          <p className="text-gray-500 mt-1">Dashboard admin — Round 2</p>
+          <p className="text-gray-500 mt-1">Round 2 — Bienvenue {project.admin_name ?? 'toi'} 👋</p>
         </div>
 
         {/* Progression votes */}
@@ -110,36 +104,27 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
           </p>
         </div>
 
-        {/* Liens de vote à partager */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="font-semibold text-gray-800">Liens de vote</h2>
-              <p className="text-sm text-gray-500">Envoie le lien à chaque participant par WhatsApp / SMS</p>
-            </div>
-            <button
-              onClick={copyAll}
-              className="text-sm text-indigo-600 font-medium hover:text-indigo-800 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
-            >
-              Tout copier
+        {/* Lien universel */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 space-y-3">
+          <div>
+            <h2 className="font-semibold text-gray-800 mb-1">Lien à partager</h2>
+            <p className="text-sm text-gray-500">Envoie ce lien à tout le monde — chacun entre son email pour accéder au vote.</p>
+          </div>
+          <div className="flex gap-2">
+            <input readOnly value={`${origin}/rejoindre/${project.id}`} className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono bg-gray-50" />
+            <button onClick={copyLink} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+              {copied ? 'Copié !' : 'Copier'}
             </button>
           </div>
-          <div className="space-y-2">
+          {/* Qui a voté */}
+          <div className="border-t pt-3 space-y-1.5">
             {participants.map(p => (
-              <div key={p.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{p.email}</p>
-                  <p className="text-xs text-gray-400 font-mono truncate">{origin}/{p.token}/vote</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {p.round2_done && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Voté ✓</span>}
-                  <button
-                    onClick={() => copyLink(p.token)}
-                    className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    {copiedToken === p.token ? 'Copié !' : 'Copier'}
-                  </button>
-                </div>
+              <div key={p.id} className="flex items-center justify-between text-sm">
+                <span className="text-gray-700">{p.first_name ?? p.email}</span>
+                {p.round2_done
+                  ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Voté ✓</span>
+                  : <span className="text-xs text-gray-400">En attente</span>
+                }
               </div>
             ))}
           </div>

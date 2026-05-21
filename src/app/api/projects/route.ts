@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
 
   const recipient_name = formData.get('recipient_name') as string
   const message = formData.get('message') as string | null
+  const admin_name = formData.get('admin_name') as string
   const admin_email = formData.get('admin_email') as string
   const admin_phone = formData.get('admin_phone') as string
   const round1_end = formData.get('round1_end') as string
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
   const payment_deadline = formData.get('payment_deadline') as string
   const photo = formData.get('photo') as File | null
 
-  if (!recipient_name || !admin_email || !admin_phone || !round1_end || !round2_end || !payment_deadline) {
+  if (!recipient_name || !admin_name || !admin_email || !admin_phone || !round1_end || !round2_end || !payment_deadline) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await db
     .from('projects')
-    .insert({ recipient_name, message, admin_email, admin_phone, round1_end, round2_end, payment_deadline, recipient_photo_url })
+    .insert({ recipient_name, message, admin_name, admin_email, admin_phone, round1_end, round2_end, payment_deadline, recipient_photo_url })
     .select()
     .single()
 

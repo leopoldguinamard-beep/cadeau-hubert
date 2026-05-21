@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 
 interface Props {
-  project: { recipient_name: string; final_cost: number | null; admin_phone: string }
+  project: { id: string; recipient_name: string; final_cost: number | null; admin_phone: string; admin_name?: string | null }
   winners: Array<{ title: string; photo_url: string | null; price: number | null }>
-  participants: Array<{ id: string; email: string; token: string }>
+  participants: Array<{ id: string; first_name: string | null; email: string }>
 }
 
 export default function AdminPayment({ project, winners, participants }: Props) {
@@ -14,18 +14,12 @@ export default function AdminPayment({ project, winners, participants }: Props) 
 
   useEffect(() => { setOrigin(window.location.origin) }, [])
 
-  const copyLink = (token: string) => {
-    const url = `${origin}/${token}/payment`
+  const copyLink = () => {
+    const url = `${origin}/rejoindre/${project.id}`
     const msg = `💸 Le cadeau de ${project.recipient_name} est choisi ! C'est l'heure de payer ta part. Clique ici : ${url}`
     navigator.clipboard.writeText(msg)
-    setCopiedToken(token)
+    setCopiedToken('all')
     setTimeout(() => setCopiedToken(null), 2000)
-  }
-
-  const copyAll = () => {
-    const intro = `💸 Le cadeau de ${project.recipient_name} est choisi ! C'est l'heure de payer ta part :`
-    const links = participants.map(p => `${p.email} : ${origin}/${p.token}/payment`).join('\n')
-    navigator.clipboard.writeText(`${intro}\n\n${links}`)
   }
 
   return (
@@ -67,33 +61,22 @@ export default function AdminPayment({ project, winners, participants }: Props) 
           )}
         </div>
 
-        {/* Liens de paiement individuels */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="font-semibold text-gray-800">Liens de paiement</h2>
-              <p className="text-sm text-gray-500">Envoie le lien à chaque participant — il verra son montant exact</p>
-            </div>
-            <button
-              onClick={copyAll}
-              className="text-sm text-indigo-600 font-medium border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
-            >
-              Tout copier
+        {/* Lien universel */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 space-y-3">
+          <div>
+            <h2 className="font-semibold text-gray-800 mb-1">Lien à partager</h2>
+            <p className="text-sm text-gray-500">Envoie ce lien à tout le monde — chacun entre son email pour voir sa part.</p>
+          </div>
+          <div className="flex gap-2">
+            <input readOnly value={`${origin}/rejoindre/${project.id}`} className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono bg-gray-50" />
+            <button onClick={copyLink} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+              {copiedToken === 'all' ? 'Copié !' : 'Copier'}
             </button>
           </div>
-          <div className="space-y-2">
+          <div className="border-t pt-3 space-y-1.5">
             {participants.map(p => (
-              <div key={p.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{p.email}</p>
-                  <p className="text-xs text-gray-400 font-mono truncate">{origin}/{p.token}/payment</p>
-                </div>
-                <button
-                  onClick={() => copyLink(p.token)}
-                  className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors flex-shrink-0"
-                >
-                  {copiedToken === p.token ? 'Copié !' : 'Copier'}
-                </button>
+              <div key={p.id} className="flex items-center justify-between text-sm">
+                <span className="text-gray-700">{p.first_name ?? p.email}</span>
               </div>
             ))}
           </div>

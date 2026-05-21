@@ -42,6 +42,7 @@ export default async function VotePage({ params }: Props) {
     round2_end: string
     status: string
     recipient_photo_url: string | null
+    admin_name: string | null
   }
 
   if (project.status !== 'round2') {
@@ -99,13 +100,15 @@ export default async function VotePage({ params }: Props) {
   // Commentaires
   const { data: commentsRaw } = await db
     .from('comments')
-    .select('id, suggestion_id, participant_id, content, created_at, participants(email)')
+    .select('id, suggestion_id, participant_id, content, created_at, participants(first_name, email)')
     .eq('project_id', project.id)
     .order('created_at', { ascending: true })
 
-  const getUsername = (email: string) => {
-    const p = email.slice(0, 3)
-    return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()
+  const getDisplayName = (p: { first_name?: string | null; email?: string } | null) => {
+    if (p?.first_name) return p.first_name
+    const email = p?.email ?? ''
+    const part = email.slice(0, 3)
+    return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
   }
 
   const initialComments = (commentsRaw ?? []).map(c => ({
@@ -114,13 +117,13 @@ export default async function VotePage({ params }: Props) {
     participant_id: c.participant_id as string,
     content: c.content as string,
     created_at: c.created_at as string,
-    username: getUsername((c.participants as unknown as { email: string } | null)?.email ?? ''),
+    username: getDisplayName(c.participants as unknown as { first_name?: string | null; email?: string } | null),
   }))
 
   return (
     <VoteFlow
       participantId={participant.id}
-      participantEmail={participant.email}
+      participantName={participant.first_name ?? getDisplayName({ email: participant.email })}
       projectId={project.id}
       recipientName={project.recipient_name}
       round2End={project.round2_end}

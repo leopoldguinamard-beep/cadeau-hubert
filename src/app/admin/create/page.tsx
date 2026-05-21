@@ -11,6 +11,7 @@ export default function CreateProject() {
   const [form, setForm] = useState({
     recipient_name: '',
     message: '',
+    admin_name: '',
     admin_email: '',
     admin_phone: '',
     round1_end: '',
@@ -51,6 +52,7 @@ export default function CreateProject() {
     const fd = new FormData()
     fd.append('recipient_name', form.recipient_name)
     if (form.message) fd.append('message', form.message)
+    fd.append('admin_name', form.admin_name)
     fd.append('admin_email', form.admin_email)
     fd.append('admin_phone', form.admin_phone)
     fd.append('round1_end', form.round1_end)
@@ -134,8 +136,19 @@ export default function CreateProject() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Tes infos (admin)</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Tes infos</h2>
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ton prénom</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Léo"
+                  value={form.admin_name}
+                  onChange={e => setForm({ ...form, admin_name: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ton email</label>
                 <input

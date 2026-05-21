@@ -24,7 +24,7 @@ interface Comment {
 
 interface Props {
   participantId: string
-  participantEmail: string
+  participantName: string
   projectId: string
   recipientName: string
   round2End: string
@@ -40,14 +40,9 @@ interface Props {
 
 const QUICK_EMOJIS = ['😂', '❤️', '👍', '🎁', '🎉', '😍', '🔥', '💯', '🤔', '😅']
 
-function getUsername(email: string): string {
-  const p = email.slice(0, 3)
-  return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()
-}
-
 export default function VoteFlow({
   participantId,
-  participantEmail,
+  participantName,
   projectId,
   recipientName,
   round2End,
@@ -71,7 +66,7 @@ export default function VoteFlow({
   const [submittingComment, setSubmittingComment] = useState<string | null>(null)
 
   const bg = pageBg(recipientPhotoUrl)
-  const myUsername = getUsername(participantEmail)
+  const myUsername = participantName
   const maxVotes = Math.max(...Object.values(voteCounts), 1)
   const totalVotes = Object.values(voteCounts).reduce((s, v) => s + v, 0)
 
