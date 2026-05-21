@@ -114,8 +114,9 @@ export default function CreateProject() {
                   type="tel"
                   required
                   placeholder="+33 6 12 34 56 78"
+                  maxLength={13}
                   value={form.admin_phone}
-                  onChange={e => setForm({ ...form, admin_phone: e.target.value })}
+                  onChange={e => setForm({ ...form, admin_phone: e.target.value.slice(0, 13) })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
