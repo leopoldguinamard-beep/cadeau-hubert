@@ -33,15 +33,26 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
   const total = participants.length
   const maxVotes = Math.max(...Object.values(voteCounts), 1)
 
-  const toggleSuggestion = (id: string) => {
-    const next = new Set(selectedIds)
-    next.has(id) ? next.delete(id) : next.add(id)
-    setSelectedIds(next)
-  }
-
   const computedCost = suggestions
     .filter(s => selectedIds.has(s.id))
     .reduce((sum, s) => sum + (s.price ?? 0), 0)
+
+  const toggleSuggestion = (id: string) => {
+    if (selectedIds.has(id)) {
+      // Déselectionner : toujours autorisé
+      const next = new Set(selectedIds)
+      next.delete(id)
+      setSelectedIds(next)
+      return
+    }
+    // Sélectionner : bloqué si ça ferait dépasser le budget collectif
+    const s = suggestions.find(s => s.id === id)
+    const price = s?.price ?? 0
+    if (totalBudget > 0 && computedCost + price > totalBudget) return
+    const next = new Set(selectedIds)
+    next.add(id)
+    setSelectedIds(next)
+  }
 
   const copyLink = (token: string) => {
     navigator.clipboard.writeText(`${origin}/${token}/vote`)
@@ -138,17 +149,24 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
           <div className="space-y-4">
             {suggestions.map(s => {
               const count = voteCounts[s.id] ?? 0
+              const isSelected = selectedIds.has(s.id)
+              const blocked = !isSelected && totalBudget > 0 && computedCost + (s.price ?? 0) > totalBudget
               return (
                 <label
                   key={s.id}
-                  className={`flex gap-4 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
-                    selectedIds.has(s.id) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
+                  className={`flex gap-4 p-4 border-2 rounded-xl transition-colors ${
+                    blocked
+                      ? 'border-gray-200 opacity-40 cursor-not-allowed'
+                      : isSelected
+                      ? 'border-indigo-500 bg-indigo-50 cursor-pointer'
+                      : 'border-gray-200 hover:border-gray-300 cursor-pointer'
                   }`}
                 >
                   <input
                     type="checkbox"
                     className="mt-1 h-5 w-5 accent-indigo-600 flex-shrink-0"
-                    checked={selectedIds.has(s.id)}
+                    checked={isSelected}
+                    disabled={blocked}
                     onChange={() => toggleSuggestion(s.id)}
                   />
                   <div className="flex-1">
@@ -200,7 +218,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
           )}
           <button
             onClick={handleFinalize}
-            disabled={loading || !selectedIds.size}
+            disabled={loading || !selectedIds.size || computedCost > totalBudget}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-semibold py-3 rounded-xl transition-colors"
           >
             {loading ? 'Calcul en cours...' : 'Valider et générer les liens de paiement'}
