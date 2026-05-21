@@ -41,7 +41,7 @@ export default async function VotePage({ params }: Props) {
 
   const { data: suggestions } = await db
     .from('suggestions')
-    .select('id, title, description, reason, photo_url')
+    .select('id, title, description, reason, photo_url, price')
     .eq('project_id', project.id)
     .eq('approved', true)
 

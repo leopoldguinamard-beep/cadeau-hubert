@@ -7,6 +7,7 @@ type Step = 'suggestions' | 'budget' | 'done'
 interface SuggestionDraft {
   title: string
   description: string
+  price: string
   photo: File | null
 }
 
@@ -19,7 +20,7 @@ interface Props {
 }
 
 function blankDraft(): SuggestionDraft {
-  return { title: '', description: '', photo: null }
+  return { title: '', description: '', price: '', photo: null }
 }
 
 export default function Round1Flow({ participantId, projectId, recipientName, message, round2End }: Props) {
@@ -48,6 +49,7 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
       fd.append('project_id', projectId)
       fd.append('title', d.title.trim())
       if (d.description) fd.append('description', d.description)
+      if (d.price) fd.append('price', d.price)
       if (d.photo) fd.append('photo', d.photo)
       await fetch('/api/suggestions', { method: 'POST', body: fd })
     }
@@ -133,6 +135,18 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
                   onChange={e => updateDraft(i, 'title', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Prix estimé *"
+                    value={d.price}
+                    onChange={e => updateDraft(i, 'price', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
+                </div>
                 <textarea
                   rows={3}
                   placeholder="Description, pourquoi ce serait une bonne idée... (optionnel)"

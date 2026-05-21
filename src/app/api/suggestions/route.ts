@@ -10,6 +10,8 @@ export async function POST(req: NextRequest) {
   const title = formData.get('title') as string
   const description = formData.get('description') as string | null
   const reason = formData.get('reason') as string | null
+  const priceRaw = formData.get('price') as string | null
+  const price = priceRaw ? parseFloat(priceRaw) : null
   const photo = formData.get('photo') as File | null
 
   if (!participant_id || !project_id || !title) {
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await db
     .from('suggestions')
-    .insert({ participant_id, project_id, title, description, reason, photo_url })
+    .insert({ participant_id, project_id, title, description, reason, price, photo_url })
     .select()
     .single()
 
