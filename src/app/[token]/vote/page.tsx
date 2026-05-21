@@ -1,9 +1,27 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import VoteFlow from './VoteFlow'
 
 interface Props {
   params: Promise<{ token: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { token } = await params
+  const db = supabaseAdmin()
+  const { data: p } = await db.from('participants').select('project_id').eq('token', token).single()
+  if (!p) return { title: 'KDO' }
+  const { data: project } = await db.from('projects').select('recipient_name, recipient_photo_url').eq('id', p.project_id).single()
+  const name = project?.recipient_name ?? ''
+  const image = project?.recipient_photo_url
+  const title = `🗳️ Vote pour le cadeau de ${name} !`
+  const description = 'Les idées sont sélectionnées — à toi de voter pour ton cadeau préféré !'
+  return {
+    title,
+    description,
+    openGraph: { title, description, ...(image && { images: [{ url: image, width: 1200, height: 630, alt: name }] }) },
+  }
 }
 
 export default async function VotePage({ params }: Props) {

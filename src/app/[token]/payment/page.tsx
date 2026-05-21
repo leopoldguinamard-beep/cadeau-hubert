@@ -1,9 +1,27 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { buildPaymentLinks } from '@/lib/payment'
 
 interface Props {
   params: Promise<{ token: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { token } = await params
+  const db = supabaseAdmin()
+  const { data: p } = await db.from('participants').select('project_id').eq('token', token).single()
+  if (!p) return { title: 'KDO' }
+  const { data: project } = await db.from('projects').select('recipient_name, recipient_photo_url').eq('id', p.project_id).single()
+  const name = project?.recipient_name ?? ''
+  const image = project?.recipient_photo_url
+  const title = `💸 C'est l'heure de payer pour le cadeau de ${name} !`
+  const description = 'Le cadeau est choisi — envoie ta part à l\'admin !'
+  return {
+    title,
+    description,
+    openGraph: { title, description, ...(image && { images: [{ url: image, width: 1200, height: 630, alt: name }] }) },
+  }
 }
 
 export default async function PaymentPage({ params }: Props) {

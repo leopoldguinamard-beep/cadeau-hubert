@@ -15,14 +15,17 @@ export default function AdminPayment({ project, winners, participants }: Props) 
   useEffect(() => { setOrigin(window.location.origin) }, [])
 
   const copyLink = (token: string) => {
-    navigator.clipboard.writeText(`${origin}/${token}/payment`)
+    const url = `${origin}/${token}/payment`
+    const msg = `💸 Le cadeau de ${project.recipient_name} est choisi ! C'est l'heure de payer ta part. Clique ici : ${url}`
+    navigator.clipboard.writeText(msg)
     setCopiedToken(token)
     setTimeout(() => setCopiedToken(null), 2000)
   }
 
   const copyAll = () => {
+    const intro = `💸 Le cadeau de ${project.recipient_name} est choisi ! C'est l'heure de payer ta part :`
     const links = participants.map(p => `${p.email} : ${origin}/${p.token}/payment`).join('\n')
-    navigator.clipboard.writeText(links)
+    navigator.clipboard.writeText(`${intro}\n\n${links}`)
   }
 
   return (

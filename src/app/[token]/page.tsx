@@ -1,10 +1,28 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { notFound, redirect } from 'next/navigation'
+import type { Metadata } from 'next'
 import Round1Flow from './Round1Flow'
 import LateJoinFlow from './LateJoinFlow'
 
 interface Props {
   params: Promise<{ token: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { token } = await params
+  const db = supabaseAdmin()
+  const { data: p } = await db.from('participants').select('project_id').eq('token', token).single()
+  if (!p) return { title: 'KDO' }
+  const { data: project } = await db.from('projects').select('recipient_name, recipient_photo_url').eq('id', p.project_id).single()
+  const name = project?.recipient_name ?? ''
+  const image = project?.recipient_photo_url
+  const title = `🎁 Cadeau groupé pour ${name}`
+  const description = 'Tu es invité(e) à participer à un cadeau groupé !'
+  return {
+    title,
+    description,
+    openGraph: { title, description, ...(image && { images: [{ url: image, width: 1200, height: 630, alt: name }] }) },
+  }
 }
 
 export default async function ParticipantPage({ params }: Props) {
