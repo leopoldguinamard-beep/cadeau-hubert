@@ -96,7 +96,7 @@ export default async function VotePage({ params }: Props) {
     participant_id: c.participant_id as string,
     content: c.content as string,
     created_at: c.created_at as string,
-    username: getUsername((c.participants as { email: string } | null)?.email ?? ''),
+    username: getUsername((c.participants as unknown as { email: string } | null)?.email ?? ''),
   }))
 
   return (
