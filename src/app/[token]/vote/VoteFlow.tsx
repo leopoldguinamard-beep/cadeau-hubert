@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { pageBg } from '@/lib/bgStyle'
+import { computeMyShare } from '@/lib/payment'
 
 interface Suggestion {
   id: string
@@ -29,7 +30,7 @@ interface Props {
   round2End: string
   suggestions: Suggestion[]
   budgetAmount: number
-  totalBudget: number
+  allBudgets: number[]
   recipientPhotoUrl?: string | null
   voteCounts: Record<string, number>
   initialVotes: string[]
@@ -52,7 +53,7 @@ export default function VoteFlow({
   round2End,
   suggestions,
   budgetAmount,
-  totalBudget,
+  allBudgets,
   recipientPhotoUrl,
   voteCounts,
   initialVotes,
@@ -74,14 +75,13 @@ export default function VoteFlow({
   const maxVotes = Math.max(...Object.values(voteCounts), 1)
   const totalVotes = Object.values(voteCounts).reduce((s, v) => s + v, 0)
 
-  // Budget proportionnel
   const selectedTotal = Array.from(selected).reduce((sum, id) => {
     const s = suggestions.find(s => s.id === id)
     return sum + (s?.price ?? 0)
   }, 0)
 
-  const myShare = totalBudget > 0 && budgetAmount > 0
-    ? selectedTotal * (budgetAmount / totalBudget)
+  const myShare = budgetAmount > 0
+    ? computeMyShare(allBudgets, budgetAmount, selectedTotal)
     : selectedTotal
 
   const gaugePercent = budgetAmount > 0 ? Math.min((myShare / budgetAmount) * 100, 100) : 0
@@ -89,10 +89,7 @@ export default function VoteFlow({
 
   const wouldExceed = (price: number) => {
     if (budgetAmount <= 0) return false
-    const newShare = totalBudget > 0
-      ? (selectedTotal + price) * (budgetAmount / totalBudget)
-      : selectedTotal + price
-    return newShare > budgetAmount
+    return computeMyShare(allBudgets, budgetAmount, selectedTotal + price) > budgetAmount
   }
 
   const toggle = (id: string) => {
@@ -156,7 +153,7 @@ export default function VoteFlow({
   return (
     <main className={`min-h-screen ${bg.className} py-10 px-4`} style={bg.style}>
       <div className="max-w-xl mx-auto space-y-6">
-        <div className="text-center">
+        <div className="bg-white rounded-2xl shadow-sm p-5 text-center">
           <div className="text-4xl mb-2">🗳️</div>
           <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {recipientName}</h1>
           <p className="text-gray-500 mt-1">
@@ -220,9 +217,9 @@ export default function VoteFlow({
                         {s.price != null && (
                           <p className="text-indigo-600 font-bold text-base mt-0.5">
                             {s.price.toFixed(0)} €
-                            {totalBudget > 0 && budgetAmount > 0 && (
+                            {budgetAmount > 0 && allBudgets.length > 0 && (
                               <span className="text-xs font-normal text-gray-400 ml-1">
-                                (ta part ≈ {(s.price * budgetAmount / totalBudget).toFixed(0)} €)
+                                (ta part ≈ {computeMyShare(allBudgets, budgetAmount, s.price).toFixed(0)} €)
                               </span>
                             )}
                           </p>

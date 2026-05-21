@@ -47,7 +47,7 @@ export default async function VotePage({ params }: Props) {
   if (project.status !== 'round2') {
     return (
       <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
           <div className="text-5xl mb-4">{project.status === 'round1' ? '⏳' : '✅'}</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {project.status === 'round1' ? 'Le Round 2 n\'est pas encore ouvert' : 'Les votes sont clôturés'}
@@ -70,12 +70,12 @@ export default async function VotePage({ params }: Props) {
     .eq('participant_id', participant.id)
     .single()
 
-  // Budget collectif total (pour calculer la part proportionnelle de chacun)
-  const { data: allBudgets } = await db
+  // Tous les budgets (pour calculer la part selon l'algorithme équitable)
+  const { data: allBudgetsRaw } = await db
     .from('budgets')
     .select('amount')
     .eq('project_id', project.id)
-  const totalBudget = (allBudgets ?? []).reduce((s, b) => s + b.amount, 0)
+  const allBudgets = (allBudgetsRaw ?? []).map(b => b.amount)
 
   // Votes de tous pour afficher les résultats
   const { data: allVotes } = await db
@@ -126,7 +126,7 @@ export default async function VotePage({ params }: Props) {
       round2End={project.round2_end}
       suggestions={suggestions ?? []}
       budgetAmount={budget?.amount ?? 0}
-      totalBudget={totalBudget}
+      allBudgets={allBudgets}
       recipientPhotoUrl={project.recipient_photo_url}
       voteCounts={voteCounts}
       initialVotes={myVoteIds}
