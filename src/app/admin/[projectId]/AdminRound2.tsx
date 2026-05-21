@@ -55,14 +55,17 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
   }
 
   const copyLink = (token: string) => {
-    navigator.clipboard.writeText(`${origin}/${token}/vote`)
+    const url = `${origin}/${token}/vote`
+    const msg = `🗳️ C'est le moment de voter pour le cadeau de ${project.recipient_name} ! Clique ici pour voter : ${url}`
+    navigator.clipboard.writeText(msg)
     setCopiedToken(token)
     setTimeout(() => setCopiedToken(null), 2000)
   }
 
   const copyAll = () => {
+    const intro = `🗳️ C'est le moment de voter pour le cadeau de ${project.recipient_name} !`
     const links = participants.map(p => `${p.email} : ${origin}/${p.token}/vote`).join('\n')
-    navigator.clipboard.writeText(links)
+    navigator.clipboard.writeText(`${intro}\n\n${links}`)
   }
 
   const handleFinalize = async () => {

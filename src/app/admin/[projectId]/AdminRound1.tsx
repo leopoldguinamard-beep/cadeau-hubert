@@ -34,7 +34,9 @@ export default function AdminRound1({ project, suggestions, participants, totalB
   }
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`${origin}/rejoindre/${project.id}`)
+    const url = `${origin}/rejoindre/${project.id}`
+    const msg = `🎁 On organise un cadeau groupé pour ${project.recipient_name} ! Propose tes idées et indique ton budget (anonyme) ici : ${url}`
+    navigator.clipboard.writeText(msg)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
