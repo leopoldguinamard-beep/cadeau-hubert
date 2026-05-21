@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { pageBg } from '@/lib/bgStyle'
 
 type Step = 'suggestions' | 'budget' | 'done'
 
@@ -17,13 +18,15 @@ interface Props {
   recipientName: string
   message: string | null
   round2End: string
+  recipientPhotoUrl?: string | null
 }
 
 function blankDraft(): SuggestionDraft {
   return { title: '', description: '', price: '', photo: null }
 }
 
-export default function Round1Flow({ participantId, projectId, recipientName, message, round2End }: Props) {
+export default function Round1Flow({ participantId, projectId, recipientName, message, round2End, recipientPhotoUrl }: Props) {
+  const bg = pageBg(recipientPhotoUrl)
   const [step, setStep] = useState<Step>('suggestions')
   const [drafts, setDrafts] = useState<SuggestionDraft[]>([blankDraft()])
   const [budget, setBudget] = useState('')
@@ -82,7 +85,7 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
 
   if (step === 'done') {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
+      <main className={`min-h-screen ${bg.className} flex items-center justify-center px-4`} style={bg.style}>
         <div className="text-center max-w-md">
           <div className="text-5xl mb-4">🎉</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Merci !</h1>
@@ -96,7 +99,7 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-10 px-4">
+    <main className={`min-h-screen ${bg.className} py-10 px-4`} style={bg.style}>
       <div className="max-w-xl mx-auto">
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">🎁</div>

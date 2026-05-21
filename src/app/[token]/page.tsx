@@ -26,6 +26,7 @@ export default async function ParticipantPage({ params }: Props) {
     round1_end: string
     round2_end: string
     status: string
+    recipient_photo_url: string | null
   }
 
   // Phase paiement → redirige directement vers la page de paiement
@@ -58,6 +59,7 @@ export default async function ParticipantPage({ params }: Props) {
         projectId={project.id}
         recipientName={project.recipient_name}
         token={token}
+        recipientPhotoUrl={project.recipient_photo_url}
       />
     )
   }
@@ -86,6 +88,7 @@ export default async function ParticipantPage({ params }: Props) {
       recipientName={project.recipient_name}
       message={project.message}
       round2End={project.round2_end}
+      recipientPhotoUrl={project.recipient_photo_url}
     />
   )
 }

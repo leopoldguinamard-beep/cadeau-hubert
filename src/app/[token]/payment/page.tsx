@@ -26,11 +26,19 @@ export default async function PaymentPage({ params }: Props) {
     selected_suggestion_id: string | null
     status: string
     payment_deadline: string
+    recipient_photo_url: string | null
   }
+
+  const bgStyle = project.recipient_photo_url ? {
+    backgroundImage: `linear-gradient(rgba(238,242,255,0.55), rgba(245,243,255,0.55)), url(${project.recipient_photo_url})`,
+    backgroundSize: 'cover' as const,
+    backgroundPosition: 'center top' as const,
+  } : undefined
+  const bgClass = project.recipient_photo_url ? '' : 'bg-gradient-to-br from-indigo-50 to-purple-50'
 
   if (project.status !== 'payment' && project.status !== 'done') {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
+      <main className={`min-h-screen ${bgClass} flex items-center justify-center px-4`} style={bgStyle}>
         <div className="text-center max-w-md">
           <div className="text-5xl mb-4">⏳</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Le paiement n&apos;est pas encore ouvert</h1>
@@ -57,7 +65,7 @@ export default async function PaymentPage({ params }: Props) {
   )
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-10 px-4">
+    <main className={`min-h-screen ${bgClass} py-10 px-4`} style={bgStyle}>
       <div className="max-w-md mx-auto space-y-6">
         <div className="text-center">
           <div className="text-4xl mb-2">💸</div>

@@ -23,6 +23,7 @@ export default async function VotePage({ params }: Props) {
     recipient_name: string
     round2_end: string
     status: string
+    recipient_photo_url: string | null
   }
 
   if (project.status !== 'round2') {
@@ -86,6 +87,7 @@ export default async function VotePage({ params }: Props) {
       suggestions={suggestions ?? []}
       budgetAmount={budget?.amount ?? 0}
       totalBudget={totalBudget}
+      recipientPhotoUrl={project.recipient_photo_url}
       voteCounts={voteCounts}
       initialVotes={myVoteIds}
       alreadyVoted={participant.round2_done}

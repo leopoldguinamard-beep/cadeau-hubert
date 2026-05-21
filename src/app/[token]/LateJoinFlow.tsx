@@ -2,16 +2,19 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { pageBg } from '@/lib/bgStyle'
 
 interface Props {
   participantId: string
   projectId: string
   recipientName: string
   token: string
+  recipientPhotoUrl?: string | null
 }
 
-export default function LateJoinFlow({ participantId, projectId, recipientName, token }: Props) {
+export default function LateJoinFlow({ participantId, projectId, recipientName, token, recipientPhotoUrl }: Props) {
   const router = useRouter()
+  const bg = pageBg(recipientPhotoUrl)
   const [budget, setBudget] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -33,7 +36,7 @@ export default function LateJoinFlow({ participantId, projectId, recipientName, 
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
+    <main className={`min-h-screen ${bg.className} flex items-center justify-center px-4`} style={bg.style}>
       <div className="max-w-md w-full space-y-5">
         <div className="text-center">
           <div className="text-5xl mb-3">🎁</div>

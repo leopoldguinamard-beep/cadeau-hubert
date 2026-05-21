@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { pageBg } from '@/lib/bgStyle'
 
 interface Suggestion {
   id: string
@@ -17,8 +18,9 @@ interface Props {
   recipientName: string
   round2End: string
   suggestions: Suggestion[]
-  budgetAmount: number   // mon budget individuel
-  totalBudget: number    // somme de tous les budgets
+  budgetAmount: number
+  totalBudget: number
+  recipientPhotoUrl?: string | null
   voteCounts: Record<string, number>
   initialVotes: string[]
   alreadyVoted: boolean
@@ -32,6 +34,7 @@ export default function VoteFlow({
   suggestions,
   budgetAmount,
   totalBudget,
+  recipientPhotoUrl,
   voteCounts,
   initialVotes,
   alreadyVoted,
@@ -40,6 +43,7 @@ export default function VoteFlow({
   const [submitted, setSubmitted] = useState(alreadyVoted)
   const [loading, setLoading] = useState(false)
 
+  const bg = pageBg(recipientPhotoUrl)
   const maxVotes = Math.max(...Object.values(voteCounts), 1)
   const totalVotes = Object.values(voteCounts).reduce((s, v) => s + v, 0)
 
@@ -106,7 +110,7 @@ export default function VoteFlow({
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-10 px-4">
+    <main className={`min-h-screen ${bg.className} py-10 px-4`} style={bg.style}>
       <div className="max-w-xl mx-auto space-y-6">
         <div className="text-center">
           <div className="text-4xl mb-2">🗳️</div>

@@ -2,10 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function CreateProject() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [form, setForm] = useState({
     recipient_name: '',
     message: '',
@@ -20,34 +23,43 @@ export default function CreateProject() {
   const round2Ref = useRef<HTMLInputElement>(null)
   const paymentRef = useRef<HTMLInputElement>(null)
 
-  // Ouvre le calendrier Round 1 au montage
   useEffect(() => {
     try { round1Ref.current?.showPicker() } catch {}
   }, [])
 
-  // Ouvre le calendrier Round 2 dès que Round 1 est rempli
   useEffect(() => {
     if (form.round1_end) {
       setTimeout(() => { try { round2Ref.current?.showPicker() } catch {} }, 50)
     }
   }, [form.round1_end])
 
-  // Ouvre le calendrier paiement dès que Round 2 est rempli
   useEffect(() => {
     if (form.round2_end) {
       setTimeout(() => { try { paymentRef.current?.showPicker() } catch {} }, 50)
     }
   }, [form.round2_end])
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    setPhoto(file)
+    setPhotoPreview(file ? URL.createObjectURL(file) : null)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
 
-    const res = await fetch('/api/projects', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
+    const fd = new FormData()
+    fd.append('recipient_name', form.recipient_name)
+    if (form.message) fd.append('message', form.message)
+    fd.append('admin_email', form.admin_email)
+    fd.append('admin_phone', form.admin_phone)
+    fd.append('round1_end', form.round1_end)
+    fd.append('round2_end', form.round2_end)
+    fd.append('payment_deadline', form.payment_deadline)
+    if (photo) fd.append('photo', photo)
+
+    const res = await fetch('/api/projects', { method: 'POST', body: fd })
     const project = await res.json()
     if (!res.ok) { alert(project.error); setLoading(false); return }
 
@@ -77,6 +89,36 @@ export default function CreateProject() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
+
+              {/* Photo de la personne */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Photo de {form.recipient_name || 'la personne'} <span className="text-gray-400">(optionnel — fond de l&apos;appli)</span>
+                </label>
+                {photoPreview ? (
+                  <div className="relative">
+                    <img
+                      src={photoPreview}
+                      alt="Aperçu"
+                      className="w-full h-40 object-cover rounded-xl"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setPhoto(null); setPhotoPreview(null) }}
+                      className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-lg hover:bg-black/70"
+                    >
+                      Changer
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors">
+                    <span className="text-3xl mb-1">📷</span>
+                    <span className="text-sm text-gray-500">Ajouter une photo</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                  </label>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Message pour les participants <span className="text-gray-400">(optionnel)</span>
@@ -113,7 +155,7 @@ export default function CreateProject() {
                 <input
                   type="tel"
                   required
-                  placeholder="+33 6 12 34 56 78"
+                  placeholder="+33612345678"
                   maxLength={13}
                   value={form.admin_phone}
                   onChange={e => setForm({ ...form, admin_phone: e.target.value.slice(0, 13) })}
@@ -126,7 +168,6 @@ export default function CreateProject() {
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-gray-800">Planning</h2>
 
-            {/* Round 1 */}
             <div className="border border-gray-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📝</span>
@@ -148,7 +189,6 @@ export default function CreateProject() {
               </div>
             </div>
 
-            {/* Round 2 — apparaît dès que round1 est rempli */}
             {form.round1_end && (
               <div className="border border-gray-200 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2">
@@ -173,7 +213,6 @@ export default function CreateProject() {
               </div>
             )}
 
-            {/* Paiement — apparaît dès que round2 est rempli */}
             {form.round2_end && (
               <div className="border border-gray-200 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2">
