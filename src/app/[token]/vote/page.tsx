@@ -78,9 +78,31 @@ export default async function VotePage({ params }: Props) {
 
   const myVoteIds = (myVotes ?? []).map(v => v.suggestion_id)
 
+  // Commentaires
+  const { data: commentsRaw } = await db
+    .from('comments')
+    .select('id, suggestion_id, participant_id, content, created_at, participants(email)')
+    .eq('project_id', project.id)
+    .order('created_at', { ascending: true })
+
+  const getUsername = (email: string) => {
+    const p = email.slice(0, 3)
+    return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()
+  }
+
+  const initialComments = (commentsRaw ?? []).map(c => ({
+    id: c.id as string,
+    suggestion_id: c.suggestion_id as string,
+    participant_id: c.participant_id as string,
+    content: c.content as string,
+    created_at: c.created_at as string,
+    username: getUsername((c.participants as { email: string } | null)?.email ?? ''),
+  }))
+
   return (
     <VoteFlow
       participantId={participant.id}
+      participantEmail={participant.email}
       projectId={project.id}
       recipientName={project.recipient_name}
       round2End={project.round2_end}
@@ -91,6 +113,7 @@ export default async function VotePage({ params }: Props) {
       voteCounts={voteCounts}
       initialVotes={myVoteIds}
       alreadyVoted={participant.round2_done}
+      initialComments={initialComments}
     />
   )
 }
