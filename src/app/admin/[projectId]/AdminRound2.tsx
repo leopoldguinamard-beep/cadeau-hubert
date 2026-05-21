@@ -8,6 +8,7 @@ interface Suggestion {
   title: string
   description: string | null
   photo_url: string | null
+  price: number | null
 }
 
 interface Props {
@@ -21,8 +22,7 @@ interface Props {
 
 export default function AdminRound2({ project, suggestions, participants, voteCounts, totalBudget, adminToken }: Props) {
   const router = useRouter()
-  const [selectedId, setSelectedId] = useState<string>('')
-  const [finalCost, setFinalCost] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [origin, setOrigin] = useState('')
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
@@ -32,6 +32,16 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
   const done = participants.filter(p => p.round2_done).length
   const total = participants.length
   const maxVotes = Math.max(...Object.values(voteCounts), 1)
+
+  const toggleSuggestion = (id: string) => {
+    const next = new Set(selectedIds)
+    next.has(id) ? next.delete(id) : next.add(id)
+    setSelectedIds(next)
+  }
+
+  const computedCost = suggestions
+    .filter(s => selectedIds.has(s.id))
+    .reduce((sum, s) => sum + (s.price ?? 0), 0)
 
   const copyLink = (token: string) => {
     navigator.clipboard.writeText(`${origin}/${token}/vote`)
@@ -45,7 +55,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
   }
 
   const handleFinalize = async () => {
-    if (!selectedId || !finalCost) return alert('Sélectionne un cadeau et entre le coût final.')
+    if (!selectedIds.size) return alert('Sélectionne au moins un cadeau.')
     setLoading(true)
     const res = await fetch('/api/admin/finalize', {
       method: 'POST',
@@ -53,8 +63,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
       body: JSON.stringify({
         project_id: project.id,
         admin_token: adminToken,
-        selected_suggestion_id: selectedId,
-        final_cost: parseFloat(finalCost),
+        selected_suggestion_ids: Array.from(selectedIds),
       }),
     })
     if (!res.ok) { alert('Erreur'); setLoading(false); return }
@@ -122,9 +131,10 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
           </div>
         </div>
 
-        {/* Résultats des votes */}
+        {/* Résultats des votes + sélection */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="font-semibold text-gray-800 mb-4">Résultats des votes</h2>
+          <h2 className="font-semibold text-gray-800 mb-1">Résultats des votes</h2>
+          <p className="text-sm text-gray-500 mb-4">Sélectionne le ou les cadeaux retenus.</p>
           <div className="space-y-4">
             {suggestions.map(s => {
               const count = voteCounts[s.id] ?? 0
@@ -132,15 +142,14 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
                 <label
                   key={s.id}
                   className={`flex gap-4 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
-                    selectedId === s.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
+                    selectedIds.has(s.id) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <input
-                    type="radio"
-                    name="selected"
+                    type="checkbox"
                     className="mt-1 h-5 w-5 accent-indigo-600 flex-shrink-0"
-                    checked={selectedId === s.id}
-                    onChange={() => setSelectedId(s.id)}
+                    checked={selectedIds.has(s.id)}
+                    onChange={() => toggleSuggestion(s.id)}
                   />
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
@@ -148,7 +157,12 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
                         <img src={s.photo_url} alt={s.title} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
                       )}
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{s.title}</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-gray-900">{s.title}</p>
+                          {s.price != null && (
+                            <span className="text-sm font-semibold text-indigo-700 flex-shrink-0">{s.price.toFixed(2)} €</span>
+                          )}
+                        </div>
                         {s.description && <p className="text-sm text-gray-500 mt-0.5">{s.description}</p>}
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex-1 bg-gray-100 rounded-full h-2">
@@ -169,28 +183,24 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="font-semibold text-gray-800 mb-3">Finaliser le cadeau</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Sélectionne le cadeau gagnant ci-dessus, entre le prix réel, et génère les liens de paiement.
+            Sélectionne le ou les cadeaux retenus ci-dessus et génère les liens de paiement.
           </p>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Coût réel du cadeau (€)</label>
-            <input
-              type="number"
-              min="1"
-              step="0.01"
-              placeholder="Ex: 85.00"
-              value={finalCost}
-              onChange={e => setFinalCost(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            {finalCost && totalBudget > 0 && (
-              <p className="text-xs text-gray-400 mt-1">
-                Budget total : {totalBudget.toFixed(2)} € — les participants paieront {((parseFloat(finalCost) / totalBudget) * 100).toFixed(0)}% de leur budget annoncé.
+          {selectedIds.size > 0 && (
+            <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 mb-4">
+              <p className="text-sm text-indigo-800">
+                {selectedIds.size} cadeau{selectedIds.size > 1 ? 'x' : ''} sélectionné{selectedIds.size > 1 ? 's' : ''} —{' '}
+                <strong>Coût total : {computedCost.toFixed(2)} €</strong>
               </p>
-            )}
-          </div>
+              {totalBudget > 0 && (
+                <p className="text-xs text-indigo-600 mt-0.5">
+                  Chacun paiera environ {((computedCost / totalBudget) * 100).toFixed(0)}% de son budget annoncé.
+                </p>
+              )}
+            </div>
+          )}
           <button
             onClick={handleFinalize}
-            disabled={loading || !selectedId || !finalCost}
+            disabled={loading || !selectedIds.size}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-semibold py-3 rounded-xl transition-colors"
           >
             {loading ? 'Calcul en cours...' : 'Valider et générer les liens de paiement'}

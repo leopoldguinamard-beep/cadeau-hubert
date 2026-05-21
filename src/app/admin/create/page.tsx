@@ -105,7 +105,7 @@ export default function CreateProject() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Fin du Round 1 — suggestions &amp; budgets</label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   required
                   value={form.round1_end}
                   onChange={e => setForm({ ...form, round1_end: e.target.value, round2_end: '', payment_deadline: '' })}
@@ -117,7 +117,7 @@ export default function CreateProject() {
                   Fin du Round 2 — votes
                 </label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   required
                   disabled={!form.round1_end}
                   min={form.round1_end}
@@ -131,7 +131,7 @@ export default function CreateProject() {
                   Deadline de paiement
                 </label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   required
                   disabled={!form.round2_end}
                   min={form.round2_end}

@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react'
 
 interface Props {
   project: { recipient_name: string; final_cost: number | null; admin_phone: string }
-  suggestion: { title: string; photo_url: string | null } | null
+  winners: Array<{ title: string; photo_url: string | null; price: number | null }>
   participants: Array<{ id: string; email: string; token: string }>
 }
 
-export default function AdminPayment({ project, suggestion, participants }: Props) {
+export default function AdminPayment({ project, winners, participants }: Props) {
   const [origin, setOrigin] = useState('')
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
 
@@ -34,21 +34,33 @@ export default function AdminPayment({ project, suggestion, participants }: Prop
           <p className="text-gray-500 mt-1">Le cadeau est choisi — plus qu&apos;à collecter l&apos;argent.</p>
         </div>
 
-        {/* Récap cadeau */}
+        {/* Récap cadeaux */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="font-semibold text-gray-800 mb-4">Cadeau choisi</h2>
-          {suggestion && (
-            <div className="flex gap-4">
-              {suggestion.photo_url && (
-                <img src={suggestion.photo_url} alt={suggestion.title} className="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
-              )}
-              <div>
-                <p className="text-xl font-bold text-gray-900">{suggestion.title}</p>
-                {project.final_cost && (
-                  <p className="text-indigo-600 font-semibold mt-1">{project.final_cost.toFixed(2)} €</p>
+          <h2 className="font-semibold text-gray-800 mb-4">
+            Cadeau{winners.length > 1 ? 'x' : ''} choisi{winners.length > 1 ? 's' : ''}
+          </h2>
+          <div className="space-y-3">
+            {winners.map((w, i) => (
+              <div key={i} className="flex gap-4">
+                {w.photo_url && (
+                  <img src={w.photo_url} alt={w.title} className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
                 )}
+                <div>
+                  <p className="text-lg font-bold text-gray-900">{w.title}</p>
+                  {w.price != null && (
+                    <p className="text-indigo-600 font-semibold mt-0.5">{w.price.toFixed(2)} €</p>
+                  )}
+                </div>
               </div>
+            ))}
+          </div>
+          {project.final_cost != null && winners.length > 1 && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <p className="text-sm font-semibold text-gray-700">Total : {project.final_cost.toFixed(2)} €</p>
             </div>
+          )}
+          {project.final_cost != null && winners.length === 1 && (
+            <p className="text-indigo-600 font-semibold mt-2">{project.final_cost.toFixed(2)} €</p>
           )}
         </div>
 

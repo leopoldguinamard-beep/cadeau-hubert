@@ -80,7 +80,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
   return (
     <AdminPayment
       project={project}
-      suggestion={(suggestions ?? []).find(s => s.id === project.selected_suggestion_id) ?? null}
+      winners={(suggestions ?? []).filter(s => s.approved)}
       participants={participants ?? []}
     />
   )
