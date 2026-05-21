@@ -12,7 +12,6 @@ interface Props {
     reason: string | null
     photo_url: string | null
     approved: boolean
-    participants: { email: string } | null
   }>
   participants: Array<{ id: string; email: string; round1_done: boolean }>
   totalBudget: number

@@ -25,7 +25,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
 
   const { data: suggestions } = await db
     .from('suggestions')
-    .select('*, participants(email)')
+    .select('*')
     .eq('project_id', projectId)
 
   const { data: participants } = await db
