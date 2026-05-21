@@ -51,6 +51,13 @@ export default async function VotePage({ params }: Props) {
     .eq('participant_id', participant.id)
     .single()
 
+  // Budget collectif total (pour calculer la part proportionnelle de chacun)
+  const { data: allBudgets } = await db
+    .from('budgets')
+    .select('amount')
+    .eq('project_id', project.id)
+  const totalBudget = (allBudgets ?? []).reduce((s, b) => s + b.amount, 0)
+
   // Votes de tous pour afficher les résultats
   const { data: allVotes } = await db
     .from('votes')
@@ -78,6 +85,7 @@ export default async function VotePage({ params }: Props) {
       round2End={project.round2_end}
       suggestions={suggestions ?? []}
       budgetAmount={budget?.amount ?? 0}
+      totalBudget={totalBudget}
       voteCounts={voteCounts}
       initialVotes={myVoteIds}
       alreadyVoted={participant.round2_done}

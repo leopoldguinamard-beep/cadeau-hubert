@@ -17,7 +17,8 @@ interface Props {
   recipientName: string
   round2End: string
   suggestions: Suggestion[]
-  budgetAmount: number
+  budgetAmount: number   // mon budget individuel
+  totalBudget: number    // somme de tous les budgets
   voteCounts: Record<string, number>
   initialVotes: string[]
   alreadyVoted: boolean
@@ -30,6 +31,7 @@ export default function VoteFlow({
   round2End,
   suggestions,
   budgetAmount,
+  totalBudget,
   voteCounts,
   initialVotes,
   alreadyVoted,
@@ -41,13 +43,28 @@ export default function VoteFlow({
   const maxVotes = Math.max(...Object.values(voteCounts), 1)
   const totalVotes = Object.values(voteCounts).reduce((s, v) => s + v, 0)
 
+  // Somme des prix des cadeaux sélectionnés
   const selectedTotal = Array.from(selected).reduce((sum, id) => {
     const s = suggestions.find(s => s.id === id)
     return sum + (s?.price ?? 0)
   }, 0)
 
-  const gaugePercent = budgetAmount > 0 ? Math.min((selectedTotal / budgetAmount) * 100, 100) : 0
-  const isOverBudget = selectedTotal > budgetAmount && budgetAmount > 0
+  // Part proportionnelle estimée : ce que je paierais si ces cadeaux étaient retenus
+  const myShare = totalBudget > 0 && budgetAmount > 0
+    ? selectedTotal * (budgetAmount / totalBudget)
+    : selectedTotal
+
+  const gaugePercent = budgetAmount > 0 ? Math.min((myShare / budgetAmount) * 100, 100) : 0
+  const isOverBudget = budgetAmount > 0 && myShare > budgetAmount
+
+  // Calcule si l'ajout d'un cadeau ferait dépasser le budget
+  const wouldExceed = (price: number) => {
+    if (budgetAmount <= 0) return false
+    const newShare = totalBudget > 0
+      ? (selectedTotal + price) * (budgetAmount / totalBudget)
+      : selectedTotal + price
+    return newShare > budgetAmount
+  }
 
   const toggle = (id: string) => {
     if (submitted) return
@@ -55,7 +72,7 @@ export default function VoteFlow({
     const price = s?.price ?? 0
     const isCurrentlySelected = selected.has(id)
 
-    // Si déjà sélectionné, on peut toujours déselectionner
+    // Déselectionner : toujours autorisé
     if (isCurrentlySelected) {
       const next = new Set(selected)
       next.delete(id)
@@ -63,8 +80,8 @@ export default function VoteFlow({
       return
     }
 
-    // Sinon vérifier que le budget n'est pas dépassé
-    if (budgetAmount > 0 && selectedTotal + price > budgetAmount) return
+    // Sélectionner : bloqué si ça ferait dépasser le budget
+    if (wouldExceed(price)) return
 
     const next = new Set(selected)
     next.add(id)
@@ -101,12 +118,12 @@ export default function VoteFlow({
         {budgetAmount > 0 && !submitted && (
           <div className="bg-white rounded-2xl p-5 border border-indigo-100 space-y-3">
             <div className="flex justify-between items-center">
-              <p className="text-sm font-medium text-gray-700">Ton budget</p>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-medium text-gray-700">Ta part estimée</p>
+              <p className="text-sm font-semibold">
                 <span className={isOverBudget ? 'text-red-600' : 'text-indigo-600'}>
-                  {selectedTotal.toFixed(0)} €
+                  {myShare.toFixed(0)} €
                 </span>
-                {' '}/ {budgetAmount.toFixed(0)} €
+                <span className="text-gray-400"> / {budgetAmount.toFixed(0)} €</span>
               </p>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-3">
@@ -121,8 +138,8 @@ export default function VoteFlow({
               {selected.size === 0
                 ? 'Sélectionne les cadeaux pour lesquels tu veux voter'
                 : isOverBudget
-                ? '⚠️ Budget dépassé'
-                : `${(budgetAmount - selectedTotal).toFixed(0)} € restants`}
+                ? '⚠️ Dépasse ton budget'
+                : `Il te resterait ${(budgetAmount - myShare).toFixed(0)} € de marge`}
             </p>
           </div>
         )}
@@ -131,7 +148,7 @@ export default function VoteFlow({
           {suggestions.map(s => {
             const count = voteCounts[s.id] ?? 0
             const isSelected = selected.has(s.id)
-            const wouldExceed = budgetAmount > 0 && !isSelected && selectedTotal + (s.price ?? 0) > budgetAmount
+            const blocked = !isSelected && wouldExceed(s.price ?? 0)
             return (
               <div
                 key={s.id}
@@ -139,7 +156,7 @@ export default function VoteFlow({
                 className={`bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-all ${
                   submitted
                     ? 'cursor-default border-transparent'
-                    : wouldExceed
+                    : blocked
                     ? 'cursor-not-allowed border-transparent opacity-40'
                     : isSelected
                     ? 'cursor-pointer border-indigo-500'
@@ -154,7 +171,14 @@ export default function VoteFlow({
                     <div>
                       <p className="font-semibold text-gray-900 text-lg">{s.title}</p>
                       {s.price != null && (
-                        <p className="text-indigo-600 font-bold text-base mt-0.5">{s.price.toFixed(0)} €</p>
+                        <p className="text-indigo-600 font-bold text-base mt-0.5">
+                          {s.price.toFixed(0)} €
+                          {totalBudget > 0 && budgetAmount > 0 && (
+                            <span className="text-xs font-normal text-gray-400 ml-1">
+                              (ta part ≈ {(s.price * budgetAmount / totalBudget).toFixed(0)} €)
+                            </span>
+                          )}
+                        </p>
                       )}
                     </div>
                     {!submitted && (
@@ -167,8 +191,8 @@ export default function VoteFlow({
                   </div>
                   {s.description && <p className="text-sm text-gray-500 mt-1">{s.description}</p>}
 
-                  {wouldExceed && (
-                    <p className="text-xs text-red-500 mt-2">Budget insuffisant pour ajouter ce cadeau</p>
+                  {blocked && (
+                    <p className="text-xs text-red-400 mt-2">Budget insuffisant pour ajouter ce cadeau</p>
                   )}
 
                   {submitted && (
