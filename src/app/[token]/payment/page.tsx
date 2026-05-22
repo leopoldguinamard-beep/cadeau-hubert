@@ -71,9 +71,11 @@ export default async function PaymentPage({ params }: Props) {
     .eq('participant_id', participant.id)
     .single()
 
-  const { data: suggestion } = project.selected_suggestion_id
-    ? await db.from('suggestions').select('title, photo_url').eq('id', project.selected_suggestion_id).single()
-    : { data: null }
+  const { data: winners } = await db
+    .from('suggestions')
+    .select('title, photo_url, price')
+    .eq('project_id', project.id)
+    .eq('approved', true)
 
   return (
     <main className={`min-h-screen ${bg.className} py-10 px-4`} style={bg.style}>
@@ -84,18 +86,25 @@ export default async function PaymentPage({ params }: Props) {
           <p className="text-gray-500 mt-1">C&apos;est l&apos;heure de payer !</p>
         </div>
 
-        {suggestion && (
-          <div className="bg-white rounded-2xl shadow-sm p-5 flex gap-4 items-center">
-            {suggestion.photo_url && (
-              <Image src={suggestion.photo_url} alt={suggestion.title} width={80} height={80} className="w-20 h-20 object-cover rounded-xl flex-shrink-0" />
+        {winners && winners.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm p-5 space-y-3">
+            <p className="text-sm text-gray-500">KDO{winners.length > 1 ? 's choisis' : ' choisi'}</p>
+            {winners.map((w, i) => (
+              <div key={i} className="flex gap-4 items-center">
+                {w.photo_url && (
+                  <Image src={w.photo_url} alt={w.title} width={80} height={80} className="w-20 h-20 object-cover rounded-xl flex-shrink-0" />
+                )}
+                <div>
+                  <p className="text-lg font-bold text-gray-900">{w.title}</p>
+                  {w.price != null && (
+                    <p className="text-gray-400 text-sm">{w.price.toFixed(2)} €</p>
+                  )}
+                </div>
+              </div>
+            ))}
+            {project.final_cost && winners.length > 1 && (
+              <p className="text-sm text-gray-500 border-t pt-3">Coût total : <strong>{project.final_cost.toFixed(2)} €</strong></p>
             )}
-            <div>
-              <p className="text-sm text-gray-500">KDO choisi</p>
-              <p className="text-lg font-bold text-gray-900">{suggestion.title}</p>
-              {project.final_cost && (
-                <p className="text-gray-500 text-sm">Coût total : {project.final_cost.toFixed(2)} €</p>
-              )}
-            </div>
           </div>
         )}
 
