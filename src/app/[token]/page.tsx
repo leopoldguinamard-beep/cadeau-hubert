@@ -40,12 +40,14 @@ export default async function ParticipantPage({ params }: Props) {
   const project = participant.projects as {
     id: string
     recipient_name: string
+    admin_name: string | null
     message: string | null
     round1_end: string | null
     round2_end: string | null
     status: string
     recipient_photo_url: string | null
   }
+  const adminName = project.admin_name ?? "l'organisateur"
 
   // Phase paiement → redirige directement vers la page de paiement
   if (project.status === 'payment' || project.status === 'done') {
@@ -61,7 +63,7 @@ export default async function ParticipantPage({ params }: Props) {
           <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
             <div className="text-5xl mb-4">✅</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Vote enregistré !</h1>
-            <p className="text-gray-600">Merci — l&apos;admin va bientôt finaliser le KDO.</p>
+            <p className="text-gray-600">Merci — {adminName} va bientôt finaliser le KDO.</p>
           </div>
         </main>
       )
@@ -91,7 +93,7 @@ export default async function ParticipantPage({ params }: Props) {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Merci !</h1>
           <p className="text-gray-600">
             Tes suggestions et ton budget sont enregistrés.
-            {project.round2_end ? <> Rendez-vous le <strong>{new Date(project.round2_end).toLocaleDateString('fr-FR')}</strong> pour voter !</> : " L'admin t'enverra un lien pour voter !"}
+            {project.round2_end ? <> Rendez-vous le <strong>{new Date(project.round2_end).toLocaleDateString('fr-FR')}</strong> pour voter !</> : <> {adminName} t&apos;enverra un lien pour voter !</>}
           </p>
         </div>
       </main>
@@ -104,6 +106,7 @@ export default async function ParticipantPage({ params }: Props) {
       token={token}
       projectId={project.id}
       recipientName={project.recipient_name}
+      adminName={adminName}
       message={project.message}
       round2End={project.round2_end}
       recipientPhotoUrl={project.recipient_photo_url}

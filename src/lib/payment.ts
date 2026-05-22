@@ -74,30 +74,3 @@ export function computeMyShare(
   return remainingTotal > 0 ? remainingCost * (myBudget / remainingTotal) : 0
 }
 
-export function buildPaymentLinks(phone: string, amount: number, label: string) {
-  const encodedLabel = encodeURIComponent(label)
-  const cleanPhone = phone.replace(/\s/g, '')
-
-  return [
-    {
-      name: 'Lydia',
-      url: `https://lydia-app.com/pay?phone=${cleanPhone}&amount=${amount}&note=${encodedLabel}`,
-      color: '#00B4F0',
-    },
-    {
-      name: 'PayPal',
-      url: `https://paypal.me/${cleanPhone.replace('+', '')}/${amount}EUR`,
-      color: '#003087',
-    },
-    {
-      name: 'Revolut',
-      url: `https://revolut.me/pay`,
-      color: '#191C1F',
-    },
-    {
-      name: 'Wero',
-      url: `https://wero.eu/send?phone=${cleanPhone}&amount=${amount}&label=${encodedLabel}`,
-      color: '#5B2D8E',
-    },
-  ]
-}

@@ -16,6 +16,7 @@ interface Props {
   token: string
   projectId: string
   recipientName: string
+  adminName: string
   message: string | null
   round2End: string | null
   recipientPhotoUrl?: string | null
@@ -25,7 +26,7 @@ function blankDraft(): SuggestionDraft {
   return { title: '', description: '', price: '', photo: null }
 }
 
-export default function Round1Flow({ token, projectId, recipientName, message, round2End, recipientPhotoUrl }: Props) {
+export default function Round1Flow({ token, projectId, recipientName, adminName, message, round2End, recipientPhotoUrl }: Props) {
   const bg = pageBg(recipientPhotoUrl)
   const [step, setStep] = useState<Step>('suggestions')
   const [drafts, setDrafts] = useState<SuggestionDraft[]>([blankDraft()])
@@ -91,7 +92,7 @@ export default function Round1Flow({ token, projectId, recipientName, message, r
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Merci !</h1>
           <p className="text-gray-600">
             Tes idées et ton budget (anonyme) sont enregistrés.
-            {round2End ? <> Rendez-vous le <strong>{new Date(round2End).toLocaleDateString('fr-FR')}</strong> pour voter !</> : " L'admin t'enverra un lien pour voter !"}
+            {round2End ? <> Rendez-vous le <strong>{new Date(round2End).toLocaleDateString('fr-FR')}</strong> pour voter !</> : <> {adminName} t&apos;enverra un lien pour voter !</>}
           </p>
         </div>
       </main>
@@ -212,7 +213,7 @@ export default function Round1Flow({ token, projectId, recipientName, message, r
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-1">Ton budget</h2>
               <p className="text-sm text-gray-500">
-                Ce montant est <strong>100% anonyme</strong> — personne, même l&apos;admin, ne saura ce que tu as mis.
+                Ce montant est <strong>100% anonyme</strong> — personne, même {adminName}, ne saura ce que tu as mis.
                 Il sert uniquement à calculer la répartition équitable des coûts.
               </p>
             </div>

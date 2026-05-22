@@ -39,11 +39,12 @@ export default async function VotePage({ params }: Props) {
   const project = participant.projects as {
     id: string
     recipient_name: string
+    admin_name: string | null
     round2_end: string | null
     status: string
     recipient_photo_url: string | null
-    admin_name: string | null
   }
+  const adminName = project.admin_name ?? "l'organisateur"
 
   if (project.status !== 'round2') {
     return (
@@ -125,6 +126,7 @@ export default async function VotePage({ params }: Props) {
       participantId={participant.id}
       participantToken={token}
       participantName={participant.first_name ?? getDisplayName({ email: participant.email })}
+      adminName={adminName}
       projectId={project.id}
       recipientName={project.recipient_name}
       round2End={project.round2_end}
