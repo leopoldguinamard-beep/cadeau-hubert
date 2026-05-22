@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { str, strOpt, emailVal } from '@/lib/validate'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, getAppUrl } from '@/lib/email'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Email de bienvenue à l'admin avec son lien d'accès
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const appUrl = getAppUrl(req)
   const adminLink = `${appUrl}/admin/${data.id}?token=${data.admin_token}`
   await sendEmail({
     to: admin_email,

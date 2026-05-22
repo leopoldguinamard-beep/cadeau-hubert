@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { str } from '@/lib/validate'
-import { notifyAdmin } from '@/lib/email'
+import { notifyAdmin, getAppUrl } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
@@ -60,8 +60,7 @@ export async function POST(req: NextRequest) {
   } | null
   if (project?.admin_email) {
     const who = participant.first_name ?? 'Un participant'
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-    const adminLink = `${appUrl}/admin/${project_id}?token=${project.admin_token}`
+    const adminLink = `${getAppUrl(req)}/admin/${project_id}?token=${project.admin_token}`
     await notifyAdmin(
       project.admin_email,
       `🗳️ ${who} a voté — KDO de ${project.recipient_name}`,

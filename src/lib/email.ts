@@ -49,6 +49,16 @@ export async function sendEmail({ to, subject, htmlContent }: EmailOptions): Pro
   }
 }
 
+/**
+ * Construit l'URL de base de l'app depuis la requête entrante.
+ * Fiable sur tous les domaines (production, preview, custom domain).
+ */
+export function getAppUrl(req: { headers: { get: (k: string) => string | null } }): string {
+  const host = req.headers.get('host') ?? ''
+  const proto = req.headers.get('x-forwarded-proto') ?? 'https'
+  return `${proto}://${host}`
+}
+
 export async function notifyAdmin(
   adminEmail: string,
   subject: string,

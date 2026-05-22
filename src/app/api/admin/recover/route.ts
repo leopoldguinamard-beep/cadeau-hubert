@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { emailVal } from '@/lib/validate'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, getAppUrl } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://votre-app.vercel.app'
+  const baseUrl = getAppUrl(req)
 
   const linksHtml = projects
     .map(
