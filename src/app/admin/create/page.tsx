@@ -25,6 +25,10 @@ export default function CreateProject() {
     setPhotoPreview(file ? URL.createObjectURL(file) : null)
   }
 
+  const clearDate = (field: 'round1_end' | 'round2_end' | 'payment_deadline') => {
+    setForm(prev => ({ ...prev, [field]: '' }))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -35,9 +39,9 @@ export default function CreateProject() {
     fd.append('admin_name', form.admin_name)
     fd.append('admin_email', form.admin_email)
     fd.append('admin_phone', form.admin_phone)
-    fd.append('round1_end', form.round1_end)
-    fd.append('round2_end', form.round2_end)
-    fd.append('payment_deadline', form.payment_deadline)
+    if (form.round1_end) fd.append('round1_end', form.round1_end)
+    if (form.round2_end) fd.append('round2_end', form.round2_end)
+    if (form.payment_deadline) fd.append('payment_deadline', form.payment_deadline)
     if (photo) fd.append('photo', photo)
 
     const res = await fetch('/api/projects', { method: 'POST', body: fd })
@@ -73,9 +77,12 @@ export default function CreateProject() {
 
               {/* Photo de la personne */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Photo de {form.recipient_name || 'la personne'} <span className="text-gray-400">(optionnel — fond de l&apos;appli)</span>
+                <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                  Photo de {form.recipient_name || 'la personne'}
                 </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Fortement recommandé — elle s&apos;affiche en fond de toutes les pages et donne un côté personnel et fun. Les participants savent tout de suite pour qui ils organisent le KDO. 🎉
+                </p>
                 {photoPreview ? (
                   <div className="relative">
                     <img
@@ -158,8 +165,12 @@ export default function CreateProject() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-gray-800">Planning <span className="text-sm font-normal text-gray-400">(optionnel)</span></h2>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">Planning</h2>
+              <p className="text-sm text-gray-400 mt-0.5">Tout est optionnel — tu peux gérer manuellement sans fixer de dates.</p>
+            </div>
 
+            {/* Round 1 */}
             <div className="border border-gray-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📝</span>
@@ -169,17 +180,26 @@ export default function CreateProject() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-gray-600">Date de fin</label>
+                  {form.round1_end && (
+                    <button type="button" onClick={() => clearDate('round1_end')} className="text-xs text-gray-400 hover:text-red-500 transition-colors">
+                      ✕ Effacer
+                    </button>
+                  )}
+                </div>
                 <input
                   type="date"
                   min={new Date().toISOString().slice(0, 10)}
                   value={form.round1_end}
                   onChange={e => setForm({ ...form, round1_end: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
                 />
+                {!form.round1_end && <p className="text-xs text-gray-400 mt-1">Laisse vide pour ne pas fixer de date limite.</p>}
               </div>
             </div>
 
+            {/* Round 2 */}
             <div className="border border-gray-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🗳️</span>
@@ -189,17 +209,26 @@ export default function CreateProject() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-gray-600">Date de fin</label>
+                  {form.round2_end && (
+                    <button type="button" onClick={() => clearDate('round2_end')} className="text-xs text-gray-400 hover:text-red-500 transition-colors">
+                      ✕ Effacer
+                    </button>
+                  )}
+                </div>
                 <input
                   type="date"
                   min={form.round1_end || new Date().toISOString().slice(0, 10)}
                   value={form.round2_end}
                   onChange={e => setForm({ ...form, round2_end: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
                 />
+                {!form.round2_end && <p className="text-xs text-gray-400 mt-1">Laisse vide pour ne pas fixer de date limite.</p>}
               </div>
             </div>
 
+            {/* Paiement */}
             <div className="border border-gray-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">💸</span>
@@ -209,14 +238,22 @@ export default function CreateProject() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date limite</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-gray-600">Date limite</label>
+                  {form.payment_deadline && (
+                    <button type="button" onClick={() => clearDate('payment_deadline')} className="text-xs text-gray-400 hover:text-red-500 transition-colors">
+                      ✕ Effacer
+                    </button>
+                  )}
+                </div>
                 <input
                   type="date"
                   min={form.round2_end || form.round1_end || new Date().toISOString().slice(0, 10)}
                   value={form.payment_deadline}
                   onChange={e => setForm({ ...form, payment_deadline: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
                 />
+                {!form.payment_deadline && <p className="text-xs text-gray-400 mt-1">Laisse vide pour ne pas fixer de date limite.</p>}
               </div>
             </div>
           </section>
