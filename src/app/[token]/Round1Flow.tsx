@@ -13,11 +13,11 @@ interface SuggestionDraft {
 }
 
 interface Props {
-  participantId: string
+  token: string
   projectId: string
   recipientName: string
   message: string | null
-  round2End: string
+  round2End: string | null
   recipientPhotoUrl?: string | null
 }
 
@@ -25,7 +25,7 @@ function blankDraft(): SuggestionDraft {
   return { title: '', description: '', price: '', photo: null }
 }
 
-export default function Round1Flow({ participantId, projectId, recipientName, message, round2End, recipientPhotoUrl }: Props) {
+export default function Round1Flow({ token, projectId, recipientName, message, round2End, recipientPhotoUrl }: Props) {
   const bg = pageBg(recipientPhotoUrl)
   const [step, setStep] = useState<Step>('suggestions')
   const [drafts, setDrafts] = useState<SuggestionDraft[]>([blankDraft()])
@@ -48,7 +48,7 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
 
     for (const d of filled) {
       const fd = new FormData()
-      fd.append('participant_id', participantId)
+      fd.append('token', token)
       fd.append('project_id', projectId)
       fd.append('title', d.title.trim())
       if (d.description) fd.append('description', d.description)
@@ -75,7 +75,7 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
     const res = await fetch('/api/budget', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participant_id: participantId, project_id: projectId, amount }),
+      body: JSON.stringify({ token, project_id: projectId, amount }),
     })
 
     setLoading(false)
@@ -86,12 +86,12 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
   if (step === 'done') {
     return (
       <main className={`min-h-screen ${bg.className} flex items-center justify-center px-4`} style={bg.style}>
-        <div className="text-center max-w-md">
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
           <div className="text-5xl mb-4">🎉</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Merci !</h1>
           <p className="text-gray-600">
-            Tes idées et ton budget (anonyme) sont enregistrés. Rendez-vous le{' '}
-            <strong>{new Date(round2End).toLocaleDateString('fr-FR')}</strong> pour voter !
+            Tes idées et ton budget (anonyme) sont enregistrés.
+            {round2End ? <> Rendez-vous le <strong>{new Date(round2End).toLocaleDateString('fr-FR')}</strong> pour voter !</> : " L'admin t'enverra un lien pour voter !"}
           </p>
         </div>
       </main>
@@ -101,28 +101,27 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
   return (
     <main className={`min-h-screen ${bg.className} py-10 px-4`} style={bg.style}>
       <div className="max-w-xl mx-auto">
-        <div className="text-center mb-6">
-          <div className="text-4xl mb-2">🎁</div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {recipientName}</h1>
-          {message && <p className="text-gray-600 mt-1 italic">&ldquo;{message}&rdquo;</p>}
-        </div>
-
-        {/* Stepper */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {(['suggestions', 'budget'] as Step[]).map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              {i > 0 && <div className="w-8 h-0.5 bg-gray-200" />}
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                step === s ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'
-              }`}>{i + 1}</div>
-            </div>
-          ))}
-        </div>
-
         {step === 'suggestions' && (
           <div className="bg-white rounded-2xl shadow-sm p-6 space-y-6">
+            <div className="text-center pb-2">
+              <div className="text-4xl mb-2">🎁</div>
+              <h1 className="text-2xl font-bold text-gray-900">KDO pour {recipientName}</h1>
+              {message && <p className="text-gray-600 mt-1 italic">&ldquo;{message}&rdquo;</p>}
+            </div>
+
+            {/* Stepper */}
+            <div className="flex items-center justify-center gap-2">
+              {(['suggestions', 'budget'] as Step[]).map((s, i) => (
+                <div key={s} className="flex items-center gap-2">
+                  {i > 0 && <div className="w-8 h-0.5 bg-gray-200" />}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                    step === s ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'
+                  }`}>{i + 1}</div>
+                </div>
+              ))}
+            </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-1">Idées de cadeau pour {recipientName}</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">Idées pour {recipientName}</h2>
               <p className="text-sm text-gray-500">Tu peux en proposer plusieurs.</p>
             </div>
 
@@ -138,7 +137,7 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
                 </div>
                 <input
                   type="text"
-                  placeholder="Nom du cadeau *"
+                  placeholder="Titre *"
                   value={d.title}
                   onChange={e => updateDraft(i, 'title', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -195,6 +194,21 @@ export default function Round1Flow({ participantId, projectId, recipientName, me
 
         {step === 'budget' && (
           <div className="bg-white rounded-2xl shadow-sm p-6 space-y-5">
+            <div className="text-center pb-2">
+              <div className="text-4xl mb-2">🎁</div>
+              <h1 className="text-2xl font-bold text-gray-900">KDO pour {recipientName}</h1>
+            </div>
+            {/* Stepper */}
+            <div className="flex items-center justify-center gap-2">
+              {(['suggestions', 'budget'] as Step[]).map((s, i) => (
+                <div key={s} className="flex items-center gap-2">
+                  {i > 0 && <div className="w-8 h-0.5 bg-gray-200" />}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                    step === s ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'
+                  }`}>{i + 1}</div>
+                </div>
+              ))}
+            </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-1">Ton budget</h2>
               <p className="text-sm text-gray-500">

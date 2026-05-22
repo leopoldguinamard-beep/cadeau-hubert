@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendParticipantInviteEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
@@ -11,25 +10,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
-  const project = await db.from('projects').select('*').eq('id', project_id).single()
+  const project = await db.from('projects').select('id').eq('id', project_id).single()
   if (project.error) return NextResponse.json({ error: 'Projet introuvable' }, { status: 404 })
 
   const rows = emails.map(email => ({ project_id, email }))
   const { data, error } = await db.from('participants').upsert(rows, { onConflict: 'project_id,email' }).select()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  // Envoyer les invitations
-  await Promise.allSettled(
-    (data ?? []).map(p =>
-      sendParticipantInviteEmail(
-        p.email,
-        project.data.recipient_name,
-        p.token,
-        project.data.message,
-        project.data.round1_end
-      )
-    )
-  )
+  if (error) {
+    console.error('[participants] upsert error:', error.message)
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
+  }
 
   return NextResponse.json({ count: data?.length })
 }

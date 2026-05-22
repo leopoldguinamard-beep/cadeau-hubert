@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { buildPaymentLinks } from '@/lib/payment'
+import { pageBg } from '@/lib/bgStyle'
 
 interface Props {
   params: Promise<{ token: string }>
@@ -15,8 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: project } = await db.from('projects').select('recipient_name, recipient_photo_url').eq('id', p.project_id).single()
   const name = project?.recipient_name ?? ''
   const image = project?.recipient_photo_url
-  const title = `💸 C'est l'heure de payer pour le cadeau de ${name} !`
-  const description = 'Le cadeau est choisi — envoie ta part à l\'admin !'
+  const title = `💸 C'est l'heure de payer pour le KDO de ${name} !`
+  const description = 'Le KDO est choisi — envoie ta part à l\'admin !'
   return {
     title,
     description,
@@ -43,21 +44,16 @@ export default async function PaymentPage({ params }: Props) {
     final_cost: number | null
     selected_suggestion_id: string | null
     status: string
-    payment_deadline: string
+    payment_deadline: string | null
     recipient_photo_url: string | null
   }
 
-  const bgStyle = project.recipient_photo_url ? {
-    backgroundImage: `linear-gradient(rgba(238,242,255,0.55), rgba(245,243,255,0.55)), url(${project.recipient_photo_url})`,
-    backgroundSize: 'cover' as const,
-    backgroundPosition: 'center top' as const,
-  } : undefined
-  const bgClass = project.recipient_photo_url ? '' : 'bg-gradient-to-br from-indigo-50 to-purple-50'
+  const bg = pageBg(project.recipient_photo_url)
 
   if (project.status !== 'payment' && project.status !== 'done') {
     return (
-      <main className={`min-h-screen ${bgClass} flex items-center justify-center px-4`} style={bgStyle}>
-        <div className="text-center max-w-md">
+      <main className={`min-h-screen ${bg.className} flex items-center justify-center px-4`} style={bg.style}>
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
           <div className="text-5xl mb-4">⏳</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Le paiement n&apos;est pas encore ouvert</h1>
           <p className="text-gray-600">Consulte tes emails pour la suite.</p>
@@ -79,15 +75,15 @@ export default async function PaymentPage({ params }: Props) {
   const paymentLinks = buildPaymentLinks(
     project.admin_phone,
     payment?.amount_due ?? 0,
-    `Cadeau pour ${project.recipient_name}`
+    `KDO pour ${project.recipient_name}`
   )
 
   return (
-    <main className={`min-h-screen ${bgClass} py-10 px-4`} style={bgStyle}>
+    <main className={`min-h-screen ${bg.className} py-10 px-4`} style={bg.style}>
       <div className="max-w-md mx-auto space-y-6">
         <div className="text-center">
           <div className="text-4xl mb-2">💸</div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {project.recipient_name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">KDO pour {project.recipient_name}</h1>
           <p className="text-gray-500 mt-1">C&apos;est l&apos;heure de payer !</p>
         </div>
 
@@ -97,7 +93,7 @@ export default async function PaymentPage({ params }: Props) {
               <img src={suggestion.photo_url} alt={suggestion.title} className="w-20 h-20 object-cover rounded-xl flex-shrink-0" />
             )}
             <div>
-              <p className="text-sm text-gray-500">Cadeau choisi</p>
+              <p className="text-sm text-gray-500">KDO choisi</p>
               <p className="text-lg font-bold text-gray-900">{suggestion.title}</p>
               {project.final_cost && (
                 <p className="text-gray-500 text-sm">Coût total : {project.final_cost.toFixed(2)} €</p>
@@ -110,7 +106,7 @@ export default async function PaymentPage({ params }: Props) {
           <p className="text-indigo-200 text-sm mb-1">Ta part</p>
           <p className="text-4xl font-bold">{payment?.amount_due?.toFixed(2) ?? '—'} €</p>
           <p className="text-indigo-300 text-xs mt-2">
-            Deadline : {new Date(project.payment_deadline).toLocaleDateString('fr-FR')}
+            {project.payment_deadline ? <>Deadline : {new Date(project.payment_deadline).toLocaleDateString('fr-FR')}</> : 'Règle dès que possible'}
           </p>
         </div>
 

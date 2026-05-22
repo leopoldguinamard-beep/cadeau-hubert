@@ -28,7 +28,7 @@ export default function LateJoinFlow({ participantId, projectId, recipientName, 
     const res = await fetch('/api/budget', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participant_id: participantId, project_id: projectId, amount }),
+      body: JSON.stringify({ token, project_id: projectId, amount }),
     })
 
     if (!res.ok) { setError('Erreur, réessaie.'); setLoading(false); return }
@@ -38,18 +38,16 @@ export default function LateJoinFlow({ participantId, projectId, recipientName, 
   return (
     <main className={`min-h-screen ${bg.className} flex items-center justify-center px-4`} style={bg.style}>
       <div className="max-w-md w-full space-y-5">
-        <div className="text-center">
-          <div className="text-5xl mb-3">🎁</div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {recipientName}</h1>
-          <p className="text-gray-500 mt-1">Tu arrives un peu après le début — pas de problème !</p>
-        </div>
-
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
-          La phase de suggestions est terminée, mais tu peux encore participer au vote et au cadeau.
-          Indique juste ton budget pour qu&apos;on calcule ta part.
-        </div>
-
         <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+          <div className="text-center pb-2">
+            <div className="text-5xl mb-3">🎁</div>
+            <h1 className="text-2xl font-bold text-gray-900">KDO pour {recipientName}</h1>
+            <p className="text-gray-500 mt-1">Tu arrives un peu après le début — pas de problème !</p>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+            La phase de suggestions est terminée, mais tu peux encore participer au vote et au KDO.
+            Indique juste ton budget pour qu&apos;on calcule ta part.
+          </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Ton budget</h2>
             <p className="text-sm text-gray-500">

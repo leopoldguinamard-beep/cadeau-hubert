@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .eq('id', projectId)
     .single()
 
-  const title = project ? `Cadeau groupé pour ${project.recipient_name} 🎁` : 'KDO'
-  const description = 'Tu es invité(e) à participer à un cadeau groupé !'
+  const title = project ? `KDO pour ${project.recipient_name} 🎁` : 'KDO'
+  const description = 'Tu es invité(e) à participer à un KDO !'
   const image = project?.recipient_photo_url
 
   return {

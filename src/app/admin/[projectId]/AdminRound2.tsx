@@ -12,7 +12,7 @@ interface Suggestion {
 }
 
 interface Props {
-  project: { id: string; recipient_name: string; round2_end: string; admin_name?: string | null }
+  project: { id: string; recipient_name: string; round2_end: string | null; admin_name?: string | null }
   suggestions: Suggestion[]
   participants: Array<{ id: string; first_name: string | null; email: string; round2_done: boolean }>
   voteCounts: Record<string, number>
@@ -56,14 +56,14 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
 
   const copyLink = () => {
     const url = `${origin}/rejoindre/${project.id}`
-    const msg = `🗳️ C'est le moment de voter pour le cadeau de ${project.recipient_name} ! Clique ici : ${url}`
+    const msg = `🗳️ C'est le moment de voter pour le KDO de ${project.recipient_name} ! Clique ici : ${url}`
     navigator.clipboard.writeText(msg)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   const handleFinalize = async () => {
-    if (!selectedIds.size) return alert('Sélectionne au moins un cadeau.')
+    if (!selectedIds.size) return alert('Sélectionne au moins un KDO.')
     setLoading(true)
     const res = await fetch('/api/admin/finalize', {
       method: 'POST',
@@ -83,7 +83,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="text-center">
           <div className="text-4xl mb-2">🗳️</div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {project.recipient_name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">KDO pour {project.recipient_name}</h1>
           <p className="text-gray-500 mt-1">Round 2 — Bienvenue {project.admin_name ?? 'toi'} 👋</p>
         </div>
 
@@ -100,7 +100,9 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
             Budget total disponible : <strong>{totalBudget.toFixed(2)} €</strong>
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Round 2 ferme le {new Date(project.round2_end).toLocaleDateString('fr-FR')}
+            {project.round2_end
+              ? <>Round 2 ferme le {new Date(project.round2_end).toLocaleDateString('fr-FR')}</>
+              : 'Aucune date limite fixée'}
           </p>
         </div>
 
@@ -133,7 +135,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
         {/* Résultats des votes + sélection */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="font-semibold text-gray-800 mb-1">Résultats des votes</h2>
-          <p className="text-sm text-gray-500 mb-4">Sélectionne le ou les cadeaux retenus.</p>
+          <p className="text-sm text-gray-500 mb-4">Sélectionne le ou les KDO retenus.</p>
           <div className="space-y-4">
             {suggestions.map(s => {
               const count = voteCounts[s.id] ?? 0
@@ -187,14 +189,14 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
 
         {/* Finaliser */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="font-semibold text-gray-800 mb-3">Finaliser le cadeau</h2>
+          <h2 className="font-semibold text-gray-800 mb-3">Finaliser le KDO</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Sélectionne le ou les cadeaux retenus ci-dessus et génère les liens de paiement.
+            Sélectionne le ou les KDO retenus ci-dessus et génère les liens de paiement.
           </p>
           {selectedIds.size > 0 && (
             <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 mb-4">
               <p className="text-sm text-indigo-800">
-                {selectedIds.size} cadeau{selectedIds.size > 1 ? 'x' : ''} sélectionné{selectedIds.size > 1 ? 's' : ''} —{' '}
+                {selectedIds.size} KDO sélectionné{selectedIds.size > 1 ? 's' : ''} —{' '}
                 <strong>Coût total : {computedCost.toFixed(2)} €</strong>
               </p>
               {totalBudget > 0 && (

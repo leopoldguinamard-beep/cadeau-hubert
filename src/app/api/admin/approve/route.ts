@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendRound2Email } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
@@ -25,21 +24,6 @@ export async function POST(req: NextRequest) {
 
   // Passer en round2
   await db.from('projects').update({ status: 'round2' }).eq('id', project_id)
-
-  // Envoyer les mails de vote
-  const { data: participants } = await db
-    .from('participants')
-    .select('email, token')
-    .eq('project_id', project_id)
-
-  if (participants?.length) {
-    await sendRound2Email(
-      participants.map(p => p.email),
-      project.recipient_name,
-      participants.map(p => p.token),
-      project.round2_end
-    )
-  }
 
   return NextResponse.json({ ok: true })
 }

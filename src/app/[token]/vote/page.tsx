@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: project } = await db.from('projects').select('recipient_name, recipient_photo_url').eq('id', p.project_id).single()
   const name = project?.recipient_name ?? ''
   const image = project?.recipient_photo_url
-  const title = `🗳️ Vote pour le cadeau de ${name} !`
-  const description = 'Les idées sont sélectionnées — à toi de voter pour ton cadeau préféré !'
+  const title = `🗳️ Vote pour le KDO de ${name} !`
+  const description = 'Les idées sont sélectionnées — à toi de voter pour ton KDO préféré !'
   return {
     title,
     description,
@@ -39,7 +39,7 @@ export default async function VotePage({ params }: Props) {
   const project = participant.projects as {
     id: string
     recipient_name: string
-    round2_end: string
+    round2_end: string | null
     status: string
     recipient_photo_url: string | null
     admin_name: string | null
@@ -123,6 +123,7 @@ export default async function VotePage({ params }: Props) {
   return (
     <VoteFlow
       participantId={participant.id}
+      participantToken={token}
       participantName={participant.first_name ?? getDisplayName({ email: participant.email })}
       projectId={project.id}
       recipientName={project.recipient_name}

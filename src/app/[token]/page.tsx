@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: project } = await db.from('projects').select('recipient_name, recipient_photo_url').eq('id', p.project_id).single()
   const name = project?.recipient_name ?? ''
   const image = project?.recipient_photo_url
-  const title = `🎁 Cadeau groupé pour ${name}`
-  const description = 'Tu es invité(e) à participer à un cadeau groupé !'
+  const title = `🎁 KDO pour ${name}`
+  const description = 'Tu es invité(e) à participer à un KDO !'
   return {
     title,
     description,
@@ -41,8 +41,8 @@ export default async function ParticipantPage({ params }: Props) {
     id: string
     recipient_name: string
     message: string | null
-    round1_end: string
-    round2_end: string
+    round1_end: string | null
+    round2_end: string | null
     status: string
     recipient_photo_url: string | null
   }
@@ -58,10 +58,10 @@ export default async function ParticipantPage({ params }: Props) {
     if (participant.round2_done) {
       return (
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
-          <div className="text-center max-w-md">
+          <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
             <div className="text-5xl mb-4">✅</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Vote enregistré !</h1>
-            <p className="text-gray-600">Merci — l&apos;admin va bientôt finaliser le cadeau.</p>
+            <p className="text-gray-600">Merci — l&apos;admin va bientôt finaliser le KDO.</p>
           </div>
         </main>
       )
@@ -86,12 +86,12 @@ export default async function ParticipantPage({ params }: Props) {
   if (participant.round1_done) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
           <div className="text-5xl mb-4">✅</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Merci !</h1>
           <p className="text-gray-600">
-            Tes suggestions et ton budget sont enregistrés. Rendez-vous le{' '}
-            <strong>{new Date(project.round2_end).toLocaleDateString('fr-FR')}</strong> pour voter !
+            Tes suggestions et ton budget sont enregistrés.
+            {project.round2_end ? <> Rendez-vous le <strong>{new Date(project.round2_end).toLocaleDateString('fr-FR')}</strong> pour voter !</> : " L'admin t'enverra un lien pour voter !"}
           </p>
         </div>
       </main>
@@ -101,7 +101,7 @@ export default async function ParticipantPage({ params }: Props) {
   // Phase round1 — pas encore fait
   return (
     <Round1Flow
-      participantId={participant.id}
+      token={token}
       projectId={project.id}
       recipientName={project.recipient_name}
       message={project.message}

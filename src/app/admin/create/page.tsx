@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function CreateProject() {
@@ -18,26 +18,6 @@ export default function CreateProject() {
     round2_end: '',
     payment_deadline: '',
   })
-
-  const round1Ref = useRef<HTMLInputElement>(null)
-  const round2Ref = useRef<HTMLInputElement>(null)
-  const paymentRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    try { round1Ref.current?.showPicker() } catch {}
-  }, [])
-
-  useEffect(() => {
-    if (form.round1_end) {
-      setTimeout(() => { try { round2Ref.current?.showPicker() } catch {} }, 50)
-    }
-  }, [form.round1_end])
-
-  useEffect(() => {
-    if (form.round2_end) {
-      setTimeout(() => { try { paymentRef.current?.showPicker() } catch {} }, 50)
-    }
-  }, [form.round2_end])
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
@@ -72,12 +52,12 @@ export default function CreateProject() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🎁</div>
-          <h1 className="text-3xl font-bold text-gray-900">Nouveau cadeau groupé</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Nouveau KDO</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-8 space-y-6">
           <section>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Le cadeau</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Le KDO</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Pour qui ?</label>
@@ -178,7 +158,7 @@ export default function CreateProject() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-gray-800">Planning</h2>
+            <h2 className="text-lg font-semibold text-gray-800">Planning <span className="text-sm font-normal text-gray-400">(optionnel)</span></h2>
 
             <div className="border border-gray-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
@@ -191,64 +171,54 @@ export default function CreateProject() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
                 <input
-                  ref={round1Ref}
                   type="date"
-                  required
                   min={new Date().toISOString().slice(0, 10)}
                   value={form.round1_end}
-                  onChange={e => setForm({ ...form, round1_end: e.target.value, round2_end: '', payment_deadline: '' })}
+                  onChange={e => setForm({ ...form, round1_end: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
 
-            {form.round1_end && (
-              <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🗳️</span>
-                  <div>
-                    <p className="font-medium text-gray-800 text-sm">Round 2 — Votes</p>
-                    <p className="text-xs text-gray-500">Tu valides les meilleures idées, tout le monde vote pour son préféré.</p>
-                  </div>
-                </div>
+            <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🗳️</span>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
-                  <input
-                    ref={round2Ref}
-                    type="date"
-                    required
-                    min={form.round1_end}
-                    value={form.round2_end}
-                    onChange={e => setForm({ ...form, round2_end: e.target.value, payment_deadline: '' })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                  <p className="font-medium text-gray-800 text-sm">Round 2 — Votes</p>
+                  <p className="text-xs text-gray-500">Tu valides les meilleures idées, tout le monde vote pour son préféré.</p>
                 </div>
               </div>
-            )}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date de fin</label>
+                <input
+                  type="date"
+                  min={form.round1_end || new Date().toISOString().slice(0, 10)}
+                  value={form.round2_end}
+                  onChange={e => setForm({ ...form, round2_end: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
 
-            {form.round2_end && (
-              <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">💸</span>
-                  <div>
-                    <p className="font-medium text-gray-800 text-sm">Paiement</p>
-                    <p className="text-xs text-gray-500">Deadline pour que chacun t&apos;envoie sa part avant d&apos;acheter le cadeau.</p>
-                  </div>
-                </div>
+            <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">💸</span>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Date limite</label>
-                  <input
-                    ref={paymentRef}
-                    type="date"
-                    required
-                    min={form.round2_end}
-                    value={form.payment_deadline}
-                    onChange={e => setForm({ ...form, payment_deadline: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                  <p className="font-medium text-gray-800 text-sm">Paiement</p>
+                  <p className="text-xs text-gray-500">Deadline pour que chacun t&apos;envoie sa part avant d&apos;acheter le KDO.</p>
                 </div>
               </div>
-            )}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date limite</label>
+                <input
+                  type="date"
+                  min={form.round2_end || form.round1_end || new Date().toISOString().slice(0, 10)}
+                  value={form.payment_deadline}
+                  onChange={e => setForm({ ...form, payment_deadline: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
           </section>
 
           <button
@@ -256,7 +226,7 @@ export default function CreateProject() {
             disabled={loading}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl text-lg transition-colors"
           >
-            {loading ? 'Création en cours...' : 'Créer le cadeau groupé'}
+            {loading ? 'Création en cours...' : 'Créer le KDO'}
           </button>
         </form>
       </div>

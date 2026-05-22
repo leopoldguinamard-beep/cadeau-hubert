@@ -24,10 +24,11 @@ interface Comment {
 
 interface Props {
   participantId: string
+  participantToken: string
   participantName: string
   projectId: string
   recipientName: string
-  round2End: string
+  round2End: string | null
   suggestions: Suggestion[]
   budgetAmount: number
   allBudgets: number[]
@@ -42,6 +43,7 @@ const QUICK_EMOJIS = ['😂', '❤️', '👍', '🎁', '🎉', '😍', '🔥', 
 
 export default function VoteFlow({
   participantId,
+  participantToken,
   participantName,
   projectId,
   recipientName,
@@ -100,12 +102,12 @@ export default function VoteFlow({
   }
 
   const handleSubmit = async () => {
-    if (!selected.size) return alert('Vote pour au moins un cadeau.')
+    if (!selected.size) return alert('Vote pour au moins un KDO.')
     setLoading(true)
     const res = await fetch('/api/votes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participant_id: participantId, project_id: projectId, suggestion_ids: Array.from(selected) }),
+      body: JSON.stringify({ token: participantToken, project_id: projectId, suggestion_ids: Array.from(selected) }),
     })
     setLoading(false)
     if (res.ok) setSubmitted(true)
@@ -135,7 +137,7 @@ export default function VoteFlow({
     const res = await fetch('/api/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participant_id: participantId, suggestion_id: suggestionId, project_id: projectId, content }),
+      body: JSON.stringify({ token: participantToken, suggestion_id: suggestionId, project_id: projectId, content }),
     })
     if (res.ok) {
       const created = await res.json()
@@ -150,7 +152,7 @@ export default function VoteFlow({
       <div className="max-w-xl mx-auto space-y-6">
         <div className="bg-white rounded-2xl shadow-sm p-5 text-center">
           <div className="text-4xl mb-2">🗳️</div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {recipientName}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">KDO pour {recipientName}</h1>
           <p className="text-gray-500 mt-1">
             Round 2 — tu votes en tant que <span className="font-semibold text-indigo-600">{myUsername}</span>
           </p>
@@ -174,7 +176,7 @@ export default function VoteFlow({
             </div>
             <p className="text-xs text-gray-400">
               {selected.size === 0
-                ? 'Sélectionne les cadeaux pour lesquels tu veux voter'
+                ? 'Sélectionne les KDO pour lesquels tu veux voter'
                 : isOverBudget ? '⚠️ Dépasse ton budget'
                 : `Il te resterait ${(budgetAmount - myShare).toFixed(0)} € de marge`}
             </p>
@@ -227,7 +229,7 @@ export default function VoteFlow({
                       )}
                     </div>
                     {s.description && <p className="text-sm text-gray-500 mt-1">{s.description}</p>}
-                    {blocked && <p className="text-xs text-red-400 mt-2">Budget insuffisant pour ajouter ce cadeau</p>}
+                    {blocked && <p className="text-xs text-red-400 mt-2">Budget insuffisant pour ajouter ce KDO</p>}
 
                     {submitted && (
                       <div className="mt-3 flex items-center gap-2">
@@ -318,13 +320,12 @@ export default function VoteFlow({
             disabled={loading || !selected.size}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-semibold py-3 rounded-xl transition-colors"
           >
-            {loading ? 'Envoi...' : `Valider mon vote (${selected.size} cadeau${selected.size > 1 ? 'x' : ''})`}
+            {loading ? 'Envoi...' : `Valider mon vote (${selected.size} KDO)`}
           </button>
         ) : (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
             <p className="text-green-800 font-medium">
-              ✅ Vote enregistré ! Les résultats seront annoncés d&apos;ici le{' '}
-              {new Date(round2End).toLocaleDateString('fr-FR')}.
+              ✅ Vote enregistré !{round2End ? <> Les résultats seront annoncés d&apos;ici le {new Date(round2End).toLocaleDateString('fr-FR')}.</> : " L'admin t'enverra la suite par message."}
             </p>
           </div>
         )}

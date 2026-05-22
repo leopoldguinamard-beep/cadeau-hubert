@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { computePayments } from '@/lib/payment'
-import { sendPaymentEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
@@ -57,29 +56,6 @@ export async function POST(req: NextRequest) {
     selected_suggestion_id: selected_suggestion_ids[0],
     final_cost,
   }).eq('id', project_id)
-
-  // Envoyer les mails de paiement
-  const { data: participants } = await db
-    .from('participants')
-    .select('id, email, token')
-    .eq('project_id', project_id)
-
-  if (participants) {
-    await Promise.allSettled(
-      participants.map(p => {
-        const payment = paymentAmounts.find(pa => pa.participantId === p.id)
-        if (!payment) return Promise.resolve()
-        return sendPaymentEmail(
-          p.email,
-          project.recipient_name,
-          p.token,
-          payment.amountDue,
-          project.admin_phone,
-          project.payment_deadline
-        )
-      })
-    )
-  }
 
   return NextResponse.json({ ok: true })
 }

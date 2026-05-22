@@ -45,7 +45,7 @@ export default function JoinForm({ projectId, recipientName, recipientPhotoUrl }
         <form onSubmit={handleJoin} className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
           <div className="text-center pb-2">
             <div className="text-5xl mb-3">🎁</div>
-            <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {recipientName}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">KDO pour {recipientName}</h1>
             <p className="text-gray-500 mt-2 text-sm">Entre tes infos pour accéder à ta page personnelle.</p>
           </div>
           <div>

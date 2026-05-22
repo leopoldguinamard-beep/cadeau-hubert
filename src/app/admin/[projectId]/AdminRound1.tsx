@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Props {
-  project: { id: string; recipient_name: string; round1_end: string; round2_end: string; recipient_photo_url?: string | null; admin_name?: string | null }
+  project: { id: string; recipient_name: string; round1_end: string | null; round2_end: string | null; recipient_photo_url?: string | null; admin_name?: string | null }
   suggestions: Array<{
     id: string
     title: string
@@ -35,7 +35,7 @@ export default function AdminRound1({ project, suggestions, participants, totalB
 
   const copyLink = () => {
     const url = `${origin}/rejoindre/${project.id}`
-    const msg = `🎁 On organise un cadeau groupé pour ${project.recipient_name} ! Propose tes idées et indique ton budget (anonyme) ici : ${url}`
+    const msg = `🎁 On organise un KDO pour ${project.recipient_name} ! Propose tes idées et indique ton budget (anonyme) ici : ${url}`
     navigator.clipboard.writeText(msg)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -73,7 +73,7 @@ export default function AdminRound1({ project, suggestions, participants, totalB
           ) : (
             <div className="text-4xl mb-2">🎁</div>
           )}
-          <h1 className="text-2xl font-bold text-gray-900">Cadeau pour {project.recipient_name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">KDO pour {project.recipient_name}</h1>
           <p className="text-gray-500 mt-1">Round 1 — Bienvenue {project.admin_name ?? 'toi'} 👋</p>
         </div>
 
@@ -118,7 +118,7 @@ export default function AdminRound1({ project, suggestions, participants, totalB
             Budget total collecté (anonyme) : <strong>{totalBudget.toFixed(2)} €</strong>
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Round 1 ferme le {new Date(project.round1_end).toLocaleDateString('fr-FR')}
+            {project.round1_end ? <>Round 1 ferme le {new Date(project.round1_end).toLocaleDateString('fr-FR')}</> : 'Aucune date limite fixée'}
           </p>
         </div>
 

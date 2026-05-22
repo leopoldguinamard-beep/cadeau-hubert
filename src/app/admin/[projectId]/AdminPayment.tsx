@@ -10,16 +10,16 @@ interface Props {
 
 export default function AdminPayment({ project, winners, participants }: Props) {
   const [origin, setOrigin] = useState('')
-  const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => { setOrigin(window.location.origin) }, [])
 
   const copyLink = () => {
     const url = `${origin}/rejoindre/${project.id}`
-    const msg = `💸 Le cadeau de ${project.recipient_name} est choisi ! C'est l'heure de payer ta part. Clique ici : ${url}`
+    const msg = `💸 Le KDO de ${project.recipient_name} est choisi ! C'est l'heure de payer ta part. Clique ici : ${url}`
     navigator.clipboard.writeText(msg)
-    setCopiedToken('all')
-    setTimeout(() => setCopiedToken(null), 2000)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -28,13 +28,13 @@ export default function AdminPayment({ project, winners, participants }: Props) 
         <div className="text-center">
           <div className="text-5xl mb-3">🎉</div>
           <h1 className="text-2xl font-bold text-gray-900">C&apos;est parti !</h1>
-          <p className="text-gray-500 mt-1">Le cadeau est choisi — plus qu&apos;à collecter l&apos;argent.</p>
+          <p className="text-gray-500 mt-1">Le KDO est choisi — plus qu&apos;à collecter l&apos;argent.</p>
         </div>
 
-        {/* Récap cadeaux */}
+        {/* Récap KDO */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="font-semibold text-gray-800 mb-4">
-            Cadeau{winners.length > 1 ? 'x' : ''} choisi{winners.length > 1 ? 's' : ''}
+            KDO choisi{winners.length > 1 ? 's' : ''}
           </h2>
           <div className="space-y-3">
             {winners.map((w, i) => (
@@ -70,7 +70,7 @@ export default function AdminPayment({ project, winners, participants }: Props) 
           <div className="flex gap-2">
             <input readOnly value={`${origin}/rejoindre/${project.id}`} className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono bg-gray-50" />
             <button onClick={copyLink} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
-              {copiedToken === 'all' ? 'Copié !' : 'Copier'}
+              {copied ? 'Copié !' : 'Copier'}
             </button>
           </div>
           <div className="border-t pt-3 space-y-1.5">
@@ -84,7 +84,7 @@ export default function AdminPayment({ project, winners, participants }: Props) 
 
         <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-6 text-center">
           <p className="text-indigo-800 font-medium">
-            Tous les participants vont t&apos;envoyer l&apos;argent, n&apos;hésite pas à les relancer dans deux jours si besoin, puis achète le cadeau. Bon anniversaire à {project.recipient_name} ! 🎂
+            Tous les participants vont t&apos;envoyer l&apos;argent, n&apos;hésite pas à les relancer dans deux jours si besoin, puis achète le KDO. Bon anniversaire à {project.recipient_name} ! 🎂
           </p>
         </div>
       </div>
