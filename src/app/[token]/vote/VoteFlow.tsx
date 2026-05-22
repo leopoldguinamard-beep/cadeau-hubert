@@ -328,10 +328,18 @@ export default function VoteFlow({
             {loading ? 'Envoi...' : `Valider mon vote (${selected.size} KDO)`}
           </button>
         ) : (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-            <p className="text-green-800 font-medium">
-              ✅ Vote enregistré !{round2End ? <> Les résultats seront annoncés d&apos;ici le {new Date(round2End).toLocaleDateString('fr-FR')}.</> : <> {adminName} t&apos;enverra la suite par message.</>}
-            </p>
+          <div className="space-y-3">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <p className="text-green-800 font-medium">
+                ✅ Vote enregistré !{round2End ? <> Les résultats seront annoncés d&apos;ici le {new Date(round2End).toLocaleDateString('fr-FR')}.</> : <> {adminName} t&apos;enverra la suite par message.</>}
+              </p>
+            </div>
+            <button
+              onClick={() => setSubmitted(false)}
+              className="w-full text-sm text-indigo-600 hover:text-indigo-800 hover:underline transition-colors py-1"
+            >
+              ✏️ Modifier mon vote
+            </button>
           </div>
         )}
       </div>

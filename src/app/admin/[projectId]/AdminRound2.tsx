@@ -29,6 +29,11 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
   const [copied, setCopied] = useState(false)
 
   useEffect(() => { setOrigin(window.location.origin) }, [])
+  // Auto-refresh toutes les 30s pour voir les nouveaux votes en temps réel
+  useEffect(() => {
+    const id = setInterval(() => router.refresh(), 30_000)
+    return () => clearInterval(id)
+  }, [router])
 
   const done = participants.filter(p => p.round2_done).length
   const total = participants.length

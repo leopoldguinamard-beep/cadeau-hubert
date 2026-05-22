@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
   await db.from('participants').update({ round2_done: true }).eq('id', participant_id)
 
-  // Fire-and-forget admin notification
+  // Notification admin (awaited — serverless would cut fire-and-forget)
   const project = participant.projects as unknown as {
     admin_email: string
     recipient_name: string
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     const who = participant.first_name ?? 'Un participant'
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
     const adminLink = `${appUrl}/admin/${project_id}?token=${project.admin_token}`
-    notifyAdmin(
+    await notifyAdmin(
       project.admin_email,
       `🗳️ ${who} a voté — KDO de ${project.recipient_name}`,
       `<p><strong>${who}</strong> vient de voter pour le KDO de ${project.recipient_name}.</p>

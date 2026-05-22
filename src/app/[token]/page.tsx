@@ -54,21 +54,8 @@ export default async function ParticipantPage({ params }: Props) {
     redirect(`/${token}/payment`)
   }
 
-  // Phase round2
+  // Phase round2 → redirige vers vote (qu'ils aient déjà voté ou non — on peut modifier)
   if (project.status === 'round2') {
-    // Déjà voté
-    if (participant.round2_done) {
-      return (
-        <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
-            <div className="text-5xl mb-4">✅</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Vote enregistré !</h1>
-            <p className="text-gray-600">Merci — {adminName} va bientôt finaliser le KDO.</p>
-          </div>
-        </main>
-      )
-    }
-    // A fait le round1 → redirige vers vote
     if (participant.round1_done) {
       redirect(`/${token}/vote`)
     }
@@ -84,23 +71,17 @@ export default async function ParticipantPage({ params }: Props) {
     )
   }
 
-  // Phase round1 — déjà fait
+  // Phase round1 — fetcher le budget actuel si déjà soumis
+  let currentBudget: number | null = null
   if (participant.round1_done) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
-          <div className="text-5xl mb-4">✅</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Merci !</h1>
-          <p className="text-gray-600">
-            Tes suggestions et ton budget sont enregistrés.
-            {project.round2_end ? <> Rendez-vous le <strong>{new Date(project.round2_end).toLocaleDateString('fr-FR')}</strong> pour voter !</> : <> {adminName} t&apos;enverra un lien pour voter !</>}
-          </p>
-        </div>
-      </main>
-    )
+    const { data: budgetRow } = await db
+      .from('budgets')
+      .select('amount')
+      .eq('participant_id', participant.id)
+      .single()
+    currentBudget = budgetRow?.amount ?? null
   }
 
-  // Phase round1 — pas encore fait
   return (
     <Round1Flow
       token={token}
@@ -110,6 +91,8 @@ export default async function ParticipantPage({ params }: Props) {
       message={project.message}
       round2End={project.round2_end}
       recipientPhotoUrl={project.recipient_photo_url}
+      alreadySubmitted={participant.round1_done}
+      currentBudget={currentBudget}
     />
   )
 }

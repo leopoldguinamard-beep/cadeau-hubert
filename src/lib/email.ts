@@ -16,13 +16,16 @@ interface EmailOptions {
 
 export async function sendEmail({ to, subject, htmlContent }: EmailOptions): Promise<void> {
   const apiKey = process.env.BREVO_API_KEY
-  if (!apiKey) return // Not configured — silent no-op
+  if (!apiKey) {
+    console.warn('[email] BREVO_API_KEY not set — skipping email to', to)
+    return
+  }
 
   const senderEmail = process.env.BREVO_SENDER_EMAIL ?? 'noreply@example.com'
   const senderName = process.env.BREVO_SENDER_NAME ?? 'KDO'
 
   try {
-    await fetch('https://api.brevo.com/v3/smtp/email', {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
         'api-key': apiKey,
@@ -36,14 +39,16 @@ export async function sendEmail({ to, subject, htmlContent }: EmailOptions): Pro
         htmlContent,
       }),
     })
-  } catch {
-    // Fire-and-forget: email errors must never crash the main flow
+
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('[email] Brevo error', response.status, text)
+    }
+  } catch (err) {
+    console.error('[email] fetch error:', err)
   }
 }
 
-/**
- * Notify an admin that something happened in their project.
- */
 export async function notifyAdmin(
   adminEmail: string,
   subject: string,

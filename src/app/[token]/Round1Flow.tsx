@@ -20,17 +20,29 @@ interface Props {
   message: string | null
   round2End: string | null
   recipientPhotoUrl?: string | null
+  alreadySubmitted?: boolean
+  currentBudget?: number | null
 }
 
 function blankDraft(): SuggestionDraft {
   return { title: '', description: '', price: '', photo: null }
 }
 
-export default function Round1Flow({ token, projectId, recipientName, adminName, message, round2End, recipientPhotoUrl }: Props) {
+export default function Round1Flow({
+  token,
+  projectId,
+  recipientName,
+  adminName,
+  message,
+  round2End,
+  recipientPhotoUrl,
+  alreadySubmitted = false,
+  currentBudget = null,
+}: Props) {
   const bg = pageBg(recipientPhotoUrl)
-  const [step, setStep] = useState<Step>('suggestions')
+  const [step, setStep] = useState<Step>(alreadySubmitted ? 'done' : 'suggestions')
   const [drafts, setDrafts] = useState<SuggestionDraft[]>([blankDraft()])
-  const [budget, setBudget] = useState('')
+  const [budget, setBudget] = useState(currentBudget != null ? String(Math.round(currentBudget)) : '')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
 
@@ -84,16 +96,28 @@ export default function Round1Flow({ token, projectId, recipientName, adminName,
     setStep('done')
   }
 
+  // Écran "déjà soumis" — avec option de modifier le budget
   if (step === 'done') {
     return (
       <main className={`min-h-screen ${bg.className} flex items-center justify-center px-4`} style={bg.style}>
-        <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md">
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center max-w-md w-full">
           <div className="text-5xl mb-4">🎉</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Merci !</h1>
           <p className="text-gray-600">
             Tes idées et ton budget (anonyme) sont enregistrés.
-            {round2End ? <> Rendez-vous le <strong>{new Date(round2End).toLocaleDateString('fr-FR')}</strong> pour voter !</> : <> {adminName} t&apos;enverra un lien pour voter !</>}
+            {round2End
+              ? <> Rendez-vous le <strong>{new Date(round2End).toLocaleDateString('fr-FR')}</strong> pour voter !</>
+              : <> {adminName} t&apos;enverra un lien pour voter !</>}
           </p>
+          {currentBudget != null && (
+            <p className="text-sm text-gray-400 mt-3">Budget enregistré : {Math.round(currentBudget)} €</p>
+          )}
+          <button
+            onClick={() => { setErrors([]); setStep('budget') }}
+            className="mt-6 text-sm text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
+          >
+            ✏️ Modifier mon budget
+          </button>
         </div>
       </main>
     )
@@ -199,19 +223,25 @@ export default function Round1Flow({ token, projectId, recipientName, adminName,
               <div className="text-4xl mb-2">🎁</div>
               <h1 className="text-2xl font-bold text-gray-900">KDO pour {recipientName}</h1>
             </div>
+
             {/* Stepper */}
-            <div className="flex items-center justify-center gap-2">
-              {(['suggestions', 'budget'] as Step[]).map((s, i) => (
-                <div key={s} className="flex items-center gap-2">
-                  {i > 0 && <div className="w-8 h-0.5 bg-gray-200" />}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    step === s ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'
-                  }`}>{i + 1}</div>
-                </div>
-              ))}
-            </div>
+            {!alreadySubmitted && (
+              <div className="flex items-center justify-center gap-2">
+                {(['suggestions', 'budget'] as Step[]).map((s, i) => (
+                  <div key={s} className="flex items-center gap-2">
+                    {i > 0 && <div className="w-8 h-0.5 bg-gray-200" />}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                      step === s ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>{i + 1}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-1">Ton budget</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                {alreadySubmitted ? 'Modifier mon budget' : 'Ton budget'}
+              </h2>
               <p className="text-sm text-gray-500">
                 Ce montant est <strong>100% anonyme</strong> — personne, même {adminName}, ne saura ce que tu as mis.
                 Il sert uniquement à calculer la répartition équitable des coûts.
@@ -242,8 +272,17 @@ export default function Round1Flow({ token, projectId, recipientName, adminName,
               disabled={loading}
               className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors"
             >
-              {loading ? 'Enregistrement...' : 'Valider mon budget'}
+              {loading ? 'Enregistrement...' : alreadySubmitted ? 'Mettre à jour mon budget' : 'Valider mon budget'}
             </button>
+
+            {alreadySubmitted && (
+              <button
+                onClick={() => setStep('done')}
+                className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors py-1"
+              >
+                Annuler
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -27,6 +27,11 @@ export default function AdminRound1({ project, suggestions, participants, totalB
   const [copied, setCopied] = useState(false)
   const [origin, setOrigin] = useState('')
   useEffect(() => { setOrigin(window.location.origin) }, [])
+  // Auto-refresh toutes les 30s pour voir les nouveaux participants en temps réel
+  useEffect(() => {
+    const id = setInterval(() => router.refresh(), 30_000)
+    return () => clearInterval(id)
+  }, [router])
 
   const toggleSuggestion = (id: string) => {
     const next = new Set(selected)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { str, strOpt, emailVal } from '@/lib/validate'
+import { sendEmail } from '@/lib/email'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -57,6 +58,23 @@ export async function POST(req: NextRequest) {
     console.error('[projects] insert error:', error.message)
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
+
+  // Email de bienvenue à l'admin avec son lien d'accès
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const adminLink = `${appUrl}/admin/${data.id}?token=${data.admin_token}`
+  await sendEmail({
+    to: admin_email,
+    subject: `🎁 Ton KDO pour ${recipient_name} est prêt !`,
+    htmlContent: `
+      <p>Bonjour ${admin_name},</p>
+      <p>Ton KDO pour <strong>${recipient_name}</strong> est créé ! 🎉</p>
+      <p>Voici ton lien admin — <strong>garde-le précieusement</strong>, il te donne accès à ton tableau de bord :</p>
+      <p><a href="${adminLink}" style="color:#4f46e5;font-weight:600;font-size:16px">→ Accéder à mon tableau de bord</a></p>
+      <p style="color:#6b7280;font-size:12px">
+        Si tu perds ce lien, tu peux le retrouver sur <a href="${appUrl}/admin/recover">${appUrl}/admin/recover</a>
+      </p>
+    `,
+  })
 
   return NextResponse.json(data)
 }
