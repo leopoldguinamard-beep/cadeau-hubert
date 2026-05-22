@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   const { data: participant } = await db
     .from('participants')
-    .select('id, first_name, projects(admin_email, recipient_name, admin_name)')
+    .select('id, first_name, projects(admin_email, recipient_name, admin_name, admin_token)')
     .eq('token', token)
     .eq('project_id', project_id)
     .single()
@@ -42,13 +42,17 @@ export async function POST(req: NextRequest) {
     admin_email: string
     recipient_name: string
     admin_name: string | null
+    admin_token: string
   } | null
   if (project?.admin_email) {
     const who = participant.first_name ?? 'Un participant'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    const adminLink = `${appUrl}/admin/${project_id}?token=${project.admin_token}`
     notifyAdmin(
       project.admin_email,
       `💰 ${who} a soumis son budget — KDO de ${project.recipient_name}`,
-      `<p><strong>${who}</strong> vient de compléter le Round 1 (idées + budget) pour le KDO de ${project.recipient_name}.</p>`,
+      `<p><strong>${who}</strong> vient de compléter le Round 1 (idées + budget) pour le KDO de ${project.recipient_name}.</p>
+       <p><a href="${adminLink}" style="color:#4f46e5;font-weight:600">→ Voir mon tableau de bord</a></p>`,
     )
   }
 
