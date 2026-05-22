@@ -1,18 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { str, positiveNumber } from '@/lib/validate'
+import { notifyAdmin } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
-  const { token, project_id, amount } = await req.json()
 
-  if (!token || !project_id || !amount || amount <= 0) {
-    return NextResponse.json({ error: 'Champs manquants ou montant invalide' }, { status: 400 })
+  let token: string, project_id: string, amount: number
+  try {
+    const body = await req.json()
+    token = str(body.token, 36)
+    project_id = str(body.project_id, 36)
+    amount = positiveNumber(body.amount, 100_000)
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 })
   }
 
-  // Authentification : vérifier que le token correspond à un participant réel
   const { data: participant } = await db
     .from('participants')
-    .select('id')
+    .select('id, first_name, projects(admin_email, recipient_name, admin_name)')
     .eq('token', token)
     .eq('project_id', project_id)
     .single()
@@ -30,6 +36,21 @@ export async function POST(req: NextRequest) {
   }
 
   await db.from('participants').update({ round1_done: true }).eq('id', participant_id)
+
+  // Fire-and-forget admin notification
+  const project = participant.projects as unknown as {
+    admin_email: string
+    recipient_name: string
+    admin_name: string | null
+  } | null
+  if (project?.admin_email) {
+    const who = participant.first_name ?? 'Un participant'
+    notifyAdmin(
+      project.admin_email,
+      `💰 ${who} a soumis son budget — KDO de ${project.recipient_name}`,
+      `<p><strong>${who}</strong> vient de compléter le Round 1 (idées + budget) pour le KDO de ${project.recipient_name}.</p>`,
+    )
+  }
 
   return NextResponse.json({ ok: true })
 }

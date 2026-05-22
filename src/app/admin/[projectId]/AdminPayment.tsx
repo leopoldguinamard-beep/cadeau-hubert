@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 
 interface Props {
   project: { id: string; recipient_name: string; final_cost: number | null; admin_phone: string; admin_name?: string | null }
@@ -40,7 +41,7 @@ export default function AdminPayment({ project, winners, participants }: Props) 
             {winners.map((w, i) => (
               <div key={i} className="flex gap-4">
                 {w.photo_url && (
-                  <img src={w.photo_url} alt={w.title} className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
+                  <Image src={w.photo_url} alt={w.title} width={64} height={64} className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
                 )}
                 <div>
                   <p className="text-lg font-bold text-gray-900">{w.title}</p>

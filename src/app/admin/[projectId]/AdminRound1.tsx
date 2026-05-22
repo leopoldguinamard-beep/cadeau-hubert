@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface Props {
   project: { id: string; recipient_name: string; round1_end: string | null; round2_end: string | null; recipient_photo_url?: string | null; admin_name?: string | null }
@@ -65,9 +66,11 @@ export default function AdminRound1({ project, suggestions, participants, totalB
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="text-center">
           {project.recipient_photo_url ? (
-            <img
+            <Image
               src={project.recipient_photo_url}
               alt={project.recipient_name}
+              width={80}
+              height={80}
               className="w-20 h-20 rounded-full object-cover mx-auto mb-3 ring-4 ring-white shadow-md"
             />
           ) : (
@@ -148,7 +151,7 @@ export default function AdminRound1({ project, suggestions, participants, totalB
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-3">
                       {s.photo_url && (
-                        <img src={s.photo_url} alt={s.title} className="w-20 h-20 object-cover rounded-lg flex-shrink-0" />
+                        <Image src={s.photo_url} alt={s.title} width={80} height={80} className="w-20 h-20 object-cover rounded-lg flex-shrink-0" />
                       )}
                       <div>
                         <p className="font-semibold text-gray-900">{s.title}</p>

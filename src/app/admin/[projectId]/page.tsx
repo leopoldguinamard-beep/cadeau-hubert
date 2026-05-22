@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import AdminRound1 from './AdminRound1'
 import AdminRound2 from './AdminRound2'
 import AdminPayment from './AdminPayment'
@@ -11,7 +12,9 @@ interface Props {
 
 export default async function AdminPage({ params, searchParams }: Props) {
   const { projectId } = await params
-  const { token } = await searchParams
+  const cookieStore = await cookies()
+  const urlToken = (await searchParams).token
+  const token = urlToken ?? cookieStore.get(`admin_${projectId}`)?.value
   const db = supabaseAdmin()
 
   const { data: project } = await db

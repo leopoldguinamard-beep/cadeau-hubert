@@ -1,26 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { str, strOpt, priceOpt } from '@/lib/validate'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
   const formData = await req.formData()
 
-  const token = formData.get('token') as string
-  const project_id = formData.get('project_id') as string
-  const title = formData.get('title') as string
-  const description = formData.get('description') as string | null
-  const reason = formData.get('reason') as string | null
-  const priceRaw = formData.get('price') as string | null
-  const price = priceRaw ? parseFloat(priceRaw) : null
-  const photo = formData.get('photo') as File | null
-
-  if (!token || !project_id || !title) {
-    return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
+  let token: string, project_id: string, title: string
+  let description: string | null, reason: string | null, price: number | null
+  try {
+    token = str(formData.get('token'), 36)
+    project_id = str(formData.get('project_id'), 36)
+    title = str(formData.get('title'), 100)
+    description = strOpt(formData.get('description'), 1000)
+    reason = strOpt(formData.get('reason'), 500)
+    price = priceOpt(formData.get('price'))
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 })
   }
 
-  // Authentification : vérifier que le token correspond à un participant réel
+  const photo = formData.get('photo') as File | null
+
   const { data: participant } = await db
     .from('participants')
     .select('id')
@@ -35,6 +38,9 @@ export async function POST(req: NextRequest) {
   if (photo && photo.size > 0) {
     if (!ALLOWED_MIME.includes(photo.type)) {
       return NextResponse.json({ error: 'Format d\'image non supporté' }, { status: 400 })
+    }
+    if (photo.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'Image trop lourde (max 5 Mo)' }, { status: 400 })
     }
     const ext = photo.name.split('.').pop()
     const path = `${project_id}/${participant_id}-${Date.now()}.${ext}`

@@ -1,8 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { buildPaymentLinks } from '@/lib/payment'
+import Image from 'next/image'
 import { pageBg } from '@/lib/bgStyle'
+import PaymentActions from './PaymentActions'
 
 interface Props {
   params: Promise<{ token: string }>
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const name = project?.recipient_name ?? ''
   const image = project?.recipient_photo_url
   const title = `💸 C'est l'heure de payer pour le KDO de ${name} !`
-  const description = 'Le KDO est choisi — envoie ta part à l\'admin !'
+  const description = `Le KDO est choisi — envoie ta part !`
   return {
     title,
     description,
@@ -40,6 +41,7 @@ export default async function PaymentPage({ params }: Props) {
   const project = participant.projects as {
     id: string
     recipient_name: string
+    admin_name: string | null
     admin_phone: string
     final_cost: number | null
     selected_suggestion_id: string | null
@@ -47,6 +49,7 @@ export default async function PaymentPage({ params }: Props) {
     payment_deadline: string | null
     recipient_photo_url: string | null
   }
+  const adminName = project.admin_name ?? "l'organisateur"
 
   const bg = pageBg(project.recipient_photo_url)
 
@@ -72,12 +75,6 @@ export default async function PaymentPage({ params }: Props) {
     ? await db.from('suggestions').select('title, photo_url').eq('id', project.selected_suggestion_id).single()
     : { data: null }
 
-  const paymentLinks = buildPaymentLinks(
-    project.admin_phone,
-    payment?.amount_due ?? 0,
-    `KDO pour ${project.recipient_name}`
-  )
-
   return (
     <main className={`min-h-screen ${bg.className} py-10 px-4`} style={bg.style}>
       <div className="max-w-md mx-auto space-y-6">
@@ -90,7 +87,7 @@ export default async function PaymentPage({ params }: Props) {
         {suggestion && (
           <div className="bg-white rounded-2xl shadow-sm p-5 flex gap-4 items-center">
             {suggestion.photo_url && (
-              <img src={suggestion.photo_url} alt={suggestion.title} className="w-20 h-20 object-cover rounded-xl flex-shrink-0" />
+              <Image src={suggestion.photo_url} alt={suggestion.title} width={80} height={80} className="w-20 h-20 object-cover rounded-xl flex-shrink-0" />
             )}
             <div>
               <p className="text-sm text-gray-500">KDO choisi</p>
@@ -110,31 +107,11 @@ export default async function PaymentPage({ params }: Props) {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
-          <div>
-            <p className="font-semibold text-gray-800 mb-1">Payer l&apos;admin</p>
-            <p className="text-sm text-gray-500 mb-3">
-              Numéro : <strong className="text-gray-800 select-all">{project.admin_phone}</strong>
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {paymentLinks.map(link => (
-              <a
-                key={link.name}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white text-sm transition-opacity hover:opacity-90"
-                style={{ backgroundColor: link.color }}
-              >
-                {link.name}
-              </a>
-            ))}
-          </div>
-          <p className="text-xs text-gray-400 text-center">
-            Entre le numéro de l&apos;admin dans l&apos;appli de ton choix et envoie <strong>{payment?.amount_due?.toFixed(2)} €</strong>.
-          </p>
-        </div>
+        <PaymentActions
+          phone={project.admin_phone}
+          amount={payment?.amount_due ?? 0}
+          adminName={adminName}
+        />
       </div>
     </main>
   )

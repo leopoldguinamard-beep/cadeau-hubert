@@ -1,22 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { str } from '@/lib/validate'
+import { notifyAdmin } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const db = supabaseAdmin()
-  const { token, project_id, suggestion_ids } = await req.json() as {
-    token: string
-    project_id: string
-    suggestion_ids: string[]
+
+  let token: string, project_id: string, suggestion_ids: string[]
+  try {
+    const body = await req.json() as {
+      token: unknown
+      project_id: unknown
+      suggestion_ids: unknown
+    }
+    token = str(body.token, 36)
+    project_id = str(body.project_id, 36)
+    if (!Array.isArray(body.suggestion_ids) || !body.suggestion_ids.length) {
+      throw new Error('Aucune suggestion sélectionnée')
+    }
+    suggestion_ids = (body.suggestion_ids as unknown[]).map(id => str(id, 36))
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 })
   }
 
-  if (!token || !project_id || !suggestion_ids?.length) {
-    return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
-  }
-
-  // Authentification : vérifier que le token correspond à un participant réel
   const { data: participant } = await db
     .from('participants')
-    .select('id')
+    .select('id, first_name, projects(admin_email, recipient_name)')
     .eq('token', token)
     .eq('project_id', project_id)
     .single()
@@ -24,7 +33,6 @@ export async function POST(req: NextRequest) {
   if (!participant) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   const participant_id = participant.id
 
-  // Vérification budget côté serveur
   const { data: budget } = await db
     .from('budgets')
     .select('amount')
@@ -33,7 +41,6 @@ export async function POST(req: NextRequest) {
 
   if (!budget) return NextResponse.json({ error: 'Budget introuvable' }, { status: 400 })
 
-  // Supprimer anciens votes puis insérer les nouveaux
   await db.from('votes').delete().eq('participant_id', participant_id).eq('project_id', project_id)
 
   const rows = suggestion_ids.map(sid => ({ participant_id, project_id, suggestion_id: sid }))
@@ -44,6 +51,20 @@ export async function POST(req: NextRequest) {
   }
 
   await db.from('participants').update({ round2_done: true }).eq('id', participant_id)
+
+  // Fire-and-forget admin notification
+  const project = participant.projects as unknown as {
+    admin_email: string
+    recipient_name: string
+  } | null
+  if (project?.admin_email) {
+    const who = participant.first_name ?? 'Un participant'
+    notifyAdmin(
+      project.admin_email,
+      `🗳️ ${who} a voté — KDO de ${project.recipient_name}`,
+      `<p><strong>${who}</strong> vient de voter pour le KDO de ${project.recipient_name}.</p>`,
+    )
+  }
 
   return NextResponse.json({ ok: true })
 }

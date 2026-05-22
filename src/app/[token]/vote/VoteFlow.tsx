@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { pageBg } from '@/lib/bgStyle'
 import { computeMyShare } from '@/lib/payment'
 
@@ -26,6 +27,7 @@ interface Props {
   participantId: string
   participantToken: string
   participantName: string
+  adminName: string
   projectId: string
   recipientName: string
   round2End: string | null
@@ -45,6 +47,7 @@ export default function VoteFlow({
   participantId,
   participantToken,
   participantName,
+  adminName,
   projectId,
   recipientName,
   round2End,
@@ -205,7 +208,9 @@ export default function VoteFlow({
                 {/* Zone de vote (cliquable) */}
                 <div onClick={() => toggle(s.id)}>
                   {s.photo_url && (
-                    <img src={s.photo_url} alt={s.title} className="w-full h-48 object-cover" />
+                    <div className="relative w-full h-48">
+                      <Image src={s.photo_url} alt={s.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, 640px" />
+                    </div>
                   )}
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-2">
@@ -325,7 +330,7 @@ export default function VoteFlow({
         ) : (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
             <p className="text-green-800 font-medium">
-              ✅ Vote enregistré !{round2End ? <> Les résultats seront annoncés d&apos;ici le {new Date(round2End).toLocaleDateString('fr-FR')}.</> : " L'admin t'enverra la suite par message."}
+              ✅ Vote enregistré !{round2End ? <> Les résultats seront annoncés d&apos;ici le {new Date(round2End).toLocaleDateString('fr-FR')}.</> : <> {adminName} t&apos;enverra la suite par message.</>}
             </p>
           </div>
         )}

@@ -85,6 +85,13 @@ export default function JoinForm({ projectId, recipientName, recipientPhotoUrl }
           <p className="text-xs text-gray-400 text-center">
             Si tu as déjà participé, tu retrouveras ta progression.
           </p>
+          <p className="text-xs text-gray-400 text-center">
+            En continuant, tu acceptes notre{' '}
+            <a href="/politique-de-confidentialite" className="underline hover:text-gray-600" target="_blank" rel="noopener noreferrer">
+              politique de confidentialité
+            </a>
+            .
+          </p>
         </form>
       </div>
     </main>

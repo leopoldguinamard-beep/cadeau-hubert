@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface Suggestion {
   id: string
@@ -162,7 +163,7 @@ export default function AdminRound2({ project, suggestions, participants, voteCo
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
                       {s.photo_url && (
-                        <img src={s.photo_url} alt={s.title} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
+                        <Image src={s.photo_url} alt={s.title} width={64} height={64} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
                       )}
                       <div className="flex-1">
                         <div className="flex items-center justify-between gap-2">
